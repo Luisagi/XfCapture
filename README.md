@@ -3,38 +3,55 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥8.4.7-brightgreen.svg)](https://snakemake.readthedocs.io/en/stable/)
 
-A scalable Snakemake pipeline for analyzing *Xylella fastidiosa* targeted sequence capture enrichment (***Xf***-TSCE) sequencing data, featuring automated quality control, targeted gene reconstruction, MLST typing, and phylogenetic. 
+A scalable Snakemake pipeline for analyzing *Xylella fastidiosa* targeted sequence capture enrichment (*Xf*-TSCE) sequencing data, featuring automated quality control, targeted gene reconstruction, MLST typing, and phylogenetic analysis.
 
 ## Table of Contents
-- [Quick Start](#quick-start)
-- [Input Requirements](#input-requirements)
-- [Output Structure](#output-structure)
-- [Prerequisites](#prerequisites)
-- [Database Setup](#database-setup)
-- [Usage Examples](#usage-examples)
-- [Performance Optimization](#performance-optimization)
-- [Citation](#citation)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
 
+- [XfCapture](#xfcapture)
+  - [Table of Contents](#table-of-contents)
+  - [Authors and Contributors](#authors-and-contributors)
+  - [Overview](#overview)
+  - [Quick Start](#quick-start)
+  - [Input Requirements](#input-requirements)
+    - [File Structure](#file-structure)
+    - [Naming Conventions](#naming-conventions)
+  - [Output Structure](#output-structure)
+  - [Prerequisites](#prerequisites)
+    - [Required Software](#required-software)
+    - [System Requirements](#system-requirements)
+    - [Required Databases (see Database Setup)](#required-databases-see-database-setup)
+  - [Database Setup](#database-setup)
+    - [Kraken2 Database](#kraken2-database)
+    - [Reference Genomes](#reference-genomes)
+    - [Update config.yaml](#update-configyaml)
+  - [Usage Examples](#usage-examples)
+    - [Basic Usage](#basic-usage)
+    - [Advanced Options](#advanced-options)
+  - [Performance Optimization](#performance-optimization)
+    - [Resource Configuration](#resource-configuration)
+  - [References](#references)
+  - [License](#license)
+  - [Acknowledgments](#acknowledgments)
+
+<!-- Add a blank line before the next heading -->
+  
 ## Authors and Contributors
 
 - Luis F. Arias-Giraldo (ORCID: 0000-0003-4861-8064)
-- Maria P. Velasco-Amo (ORCID: 0000-0001-7176-0435)
-- Blanca B. Landa (ORCID: 0000-0002-9511-3731)
+- Maria P. Velasco-Amo  (ORCID: 0000-0001-7176-0435)
+- Blanca B. Landa       (ORCID: 0000-0002-9511-3731)
 
 ## Overview
 
-This pipeline processes paired-end sequencing data from ***Xylella fastidiosa*** targeted sequence capture enrichment (***Xf***-TSCE) through multiple analysis steps:
+This pipeline processes paired-end sequencing data from ***X. fastidiosa*** targeted sequence capture enrichment (*Xf*-TSCE) through multiple analysis steps:
 
 1. **Quality Control & Trimming** (fastp) - Remove adapters and low-quality reads
 2. **Taxonomic Classification** (Kraken2 + Recentrifuge) - Identify and extract *Xylella* reads
 3. **Target Gene Reconstruction** (BWA + BCFtools) - Map reads to probe sequences and generate consensus
-4. **MLST Typing** (mlst) - Multi-locus sequence typing for strain identification
+4. **MLST Typing** (MLST) - Multi-locus sequence typing for strain identification
 5. **Phylogenetic Analysis** (MAFFT + IQ-TREE) - Multiple alignment and tree reconstruction
 
 The workflow uses a **checkpoint system** to ensure only successfully reconstructed samples proceed to computationally expensive phylogenetic analysis.
-
 
 ## Quick Start
 
@@ -53,7 +70,8 @@ nano config.yaml
 ## Input Requirements
 
 ### File Structure
-```
+
+```bash
 input_fastq_dir/
 ├── sample1_R1.fastq.gz
 ├── sample1_R2.fastq.gz
@@ -62,6 +80,7 @@ input_fastq_dir/
 ```
 
 ### Naming Conventions
+
 - **Standard format**: `{sample}_R1.fastq.gz` and `{sample}_R2.fastq.gz`
 - **CASAVA format**: `{sample}_L001_R1_001.fastq.gz` and `{sample}_L001_R2_001.fastq.gz`
 - Sample names cannot contain: `_*#@%^/! ?&:;|<>`
@@ -79,7 +98,7 @@ The pipeline generates the following main output directories:
 - **04.mlst-typing/**: Provides MLST typing results, including allele assignments and sequence type predictions.
 - **05.phylogenetic_trees/**: Contains multiple sequence alignments, phylogenetic trees (Newick format), and tree visualizations for successful samples.
 
-```
+```bash
 output_dir/
 ├── 01.pre-processing/           # Quality control results
 ├── 02.tax-classification/       # Taxonomic classification
@@ -93,6 +112,7 @@ Each directory contains subfolders and files organized by sample name and analys
 ## Prerequisites
 
 ### Required Software
+
 - [Snakemake](https://snakemake.readthedocs.io/) ≥ 9.5.1
 - [Conda](https://docs.conda.io/en/latest/) or [Mamba](https://github.com/mamba-org/mamba) (recommended)
 
@@ -104,10 +124,12 @@ conda activate snakemake
 ```
 
 ### System Requirements
+
 - **RAM**: Minimum 32 GB (64+ GB recommended for large datasets)
 - **CPU**: Multi-core system (16+ cores recommended)
 
 ### Required Databases (see [Database Setup](#database-setup))
+
 - Kraken2 PlusPFP database (8 or 16 GB)
 - *Xylella fastidiosa* reference genomes
 - Probe sequences (included: `reference_seqs/probes.fasta`)
@@ -115,6 +137,7 @@ conda activate snakemake
 ## Database Setup
 
 ### Kraken2 Database
+
 ```bash
 # Download Kraken2 PlusPFP 16GB database (recommended)
 wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_16_GB_20250714.tar.gz
@@ -125,6 +148,7 @@ wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_08_GB_20250714.tar.gz
 ```
 
 ### Reference Genomes
+
 ```bash
 # Download Xylella fastidiosa genomes from NCBI
 mkdir -p reference_genomes
@@ -133,6 +157,7 @@ mkdir -p reference_genomes
 ```
 
 ### Update config.yaml
+
 ```yaml
 kraken2:
   # Path to Kraken2 PlusPFP database (choose one)
@@ -140,15 +165,14 @@ kraken2:
   #database: "/absolute/path/to/k2_pluspfp_08_GB_20250714"
 
 references:
-  # Directory containing Xylella fastidiosa reference genomes
-  xf_genomes: "/absolute/path/to/reference_genomes"
-  # Path to probe sequences (included by default)
-  probes: "reference_seqs/probes.fasta"
+  xf_genomes: "/absolute/path/to/reference_genomes" # Directory containing X. fastidiosa ref genomes
+  probes: "reference_seqs/probes.fasta" # Path to probe sequences (included by default)
 ```
 
 ## Usage Examples
 
 ### Basic Usage
+
 ```bash
 # Check configuration and dependencies
 ./run_pipeline.sh --dry-run
@@ -161,9 +185,10 @@ references:
 ```
 
 ### Advanced Options
+
 ```bash
 # Custom resource allocation
-./run_pipeline.sh --cores 20 --auto
+./run_pipeline.sh --cores 10 --auto
 
 # Force re-run specific steps
 ./run_pipeline.sh --forcerun verify_reconstruction
