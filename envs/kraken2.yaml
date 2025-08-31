@@ -10,12 +10,12 @@ dependencies:
   - blast=2.16.0=h66d330f_5
   - bzip2=1.0.8=h4bc722e_7
   - c-ares=1.34.5=hb9d3cd8_0
-  - ca-certificates=2025.7.14=hbd8a1cb_0
+  - ca-certificates=2025.8.3=hbd8a1cb_0
   - curl=8.14.1=h332b0f4_0
   - entrez-direct=22.4=he881be0_0
   - icu=75.1=he02047a_0
   - keyutils=1.6.1=h166bdaf_0
-  - kraken2=2.14=pl5321h077b44d_0
+  - kraken2=2.1.6=pl5321h077b44d_0
   - krakentools=1.2=pyh7e72e81_1
   - krb5=1.21.3=h659f571_0
   - ld_impl_linux-64=2.44=h1423503_1
@@ -52,7 +52,7 @@ dependencies:
   - ncbi-vdb=3.2.1=h9948957_0
   - ncurses=6.5=h2d0b736_3
   - numpy=2.3.1=py313hf6604e3_1
-  - openssl=3.5.1=h7b32b05_0
+  - openssl=3.5.2=h26f9b46_0
   - perl=5.32.1=7_hd590300_perl5
   - perl-archive-tar=3.04=pl5321hdfd78af_0
   - perl-carp=1.50=pl5321hd8ed1ab_0
@@ -74,6 +74,7 @@ dependencies:
   - perl-scalar-list-utils=1.69=pl5321hb9d3cd8_0
   - perl-storable=3.15=pl5321hb9d3cd8_2
   - perl-types-serialiser=1.01=pl5321hdfd78af_0
+  - pigz=2.8=hadc24fc_1
   - pip=25.1.1=pyh145f28c_0
   - popt=1.16=h0b475e3_2002
   - python=3.13.5=hec9711d_102_cp313

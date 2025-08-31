@@ -114,11 +114,12 @@ Each directory contains subfolders and files organized by sample name and analys
 ### Required Software
 
 - [Snakemake](https://snakemake.readthedocs.io/) ≥ 9.5.1
+- [Python](https://www.python.org/) ≥ 3.11 and ≤ 3.12
 - [Conda](https://docs.conda.io/en/latest/) or [Mamba](https://github.com/mamba-org/mamba) (recommended)
 
 ```bash
 # optional, if not installed already
-conda create -c conda-forge -c bioconda -n snakemake snakemake
+conda create -c conda-forge -c bioconda -n snakemake snakemake python=3.11
 # activate Snakemake environment
 conda activate snakemake
 ```
