@@ -178,6 +178,9 @@ references:
 ### Basic Usage
 
 ```bash
+# Make the script executable
+chmod +x run_pipeline.sh
+
 # Check configuration and dependencies
 ./run_pipeline.sh --dry-run
 
