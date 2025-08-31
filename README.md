@@ -82,11 +82,11 @@ input_fastq_dir/
 ### Naming Conventions
 
 - **Standard format**: `{sample}_R1.fastq.gz` and `{sample}_R2.fastq.gz`
-- **CASAVA format**: `{sample}_L001_R1_001.fastq.gz` and `{sample}_L001_R2_001.fastq.gz`
+- **CASAVA format**: `{sample}_S1_L001_R1_001.fastq.gz` and `{sample}_S1_L001_R2_001.fastq.gz`
 - Sample names cannot contain: `_*#@%^/! ?&:;|<>`
 - Supported extensions: `.fastq`, `.fq`, `.fastq.gz`, `.fq.gz`
 
-> **Note**: The pipeline automatically extracts sample names from any supported format. For CASAVA format, sample names are extracted from the portion before the first underscore (e.g., `ABC123_L001_R1_001.fastq.gz` → sample name: `ABC123`).
+> **Note**: The pipeline automatically extracts sample names from any supported format. For CASAVA format, sample names are extracted from the portion before the first underscore (e.g., `ABC123_S1_L001_R1_001.fastq.gz` → sample name: `ABC123`).
 
 ## Output Structure
 
@@ -142,10 +142,13 @@ conda activate snakemake
 ```bash
 # Download Kraken2 PlusPFP 16GB database (recommended)
 wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_16_GB_20250714.tar.gz
-tar -xzf k2_pluspfp_16_GB_20250714.tar.gz
+mkdir k2_pluspfp_16_GB_20250714
+tar -xzf k2_pluspfp_16_GB_20250714.tar.gz -C k2_pluspfp_16_GB_20250714
 
 # For smaller systems, use 8GB version
 wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_08_GB_20250714.tar.gz
+mkdir k2_pluspfp_08_GB_20250714
+tar -xzf k2_pluspfp_08_GB_20250714.tar.gz -C k2_pluspfp_08_GB_20250714
 ```
 
 ### Reference Genomes
@@ -235,33 +238,33 @@ If you use this pipeline, please cite:
 
 ## References
 
-- **Snakemake**: 
+- **Snakemake**:
   - Mölder, F., Jablonski, K. P., Letcher, B., Hall, M. B., Tomkins-Tinch, C. H., Sochat, V., Forster, J., Lee, S., Twardziok, S. O., Kanitz, A., Wilm, A., Holtgrewe, M., Rahmann, S., Nahnsen, S., & Köster, J. (2021). Sustainable data analysis with Snakemake. *F1000Research*, 10, 33.
-- **fastp**: 
+- **fastp**:
   - Chen, S., Zhou, Y., Chen, Y., & Gu, J. (2018). fastp: An ultra-fast all-in-one FASTQ preprocessor. *Bioinformatics*, 34(17), i884–i890.
-- **Kraken2**: 
+- **Kraken2**:
   - Lu, J., Rincon, N., Wood, D. E., Breitwieser, F. P., Pockrandt, C., Langmead, B., ... & Steinegger, M. (2022). Metagenome analysis using the Kraken software suite. *Nature Protocols*, 17(12), 2815-2839.  
   - Wood, D. E., Lu, J., & Langmead, B. (2019). Improved metagenomic analysis with Kraken 2. *Genome Biology*, 20(1), 257.
-- **Recentrifuge**: 
+- **Recentrifuge**:
   - Martí, J. M. (2019). Recentrifuge: Robust comparative analysis and contamination removal for metagenomics. *PLOS Computational Biology*, 15(4), e1006967.
-- **BWA**: 
+- **BWA**:
   - Li, H., & Durbin, R. (2009). Fast and accurate short read alignment with Burrows–Wheeler transform. *Bioinformatics*, 25(14), 1754-1760.
-- **Samtools & BCFtools**: 
+- **Samtools & BCFtools**:
   - Danecek, P., Bonfield, J. K., Liddle, J., Marshall, J., Ohan, V., Pollard, M. O., Whitwham, A., Keane, T., McCarthy, S. A., Davies, R. M., & Li, H. (2021). Twelve years of SAMtools and BCFtools. *GigaScience*, 10(2), giab008.
-- **BLAST+**: 
+- **BLAST+**:
   - Camacho, C., Coulouris, G., Avagyan, V., Ma, N., Papadopoulos, J., Bealer, K., & Madden, T. L. (2009). BLAST+: Architecture and applications. *BMC Bioinformatics*, 10, 421.
 - **SeqKit**:
   - Shen, W., Le, S., Li, Y., & Hu, F. (2016). SeqKit: a cross-platform and ultrafast toolkit for FASTA/Q file manipulation. PloS one, 11(10), e0163962.
 - **MLST-typing**:
   - https://github.com/tseemann/mlst
   - Jolley, K. A., & Maiden, M. C. (2010). BIGSdb: scalable analysis of bacterial genome variation at the population level. BMC bioinformatics, 11(1), 595.
-- **MAFFT**: 
+- **MAFFT**:
   - Katoh, K., & Standley, D. M. (2013). MAFFT multiple sequence alignment software version 7: improvements in performance and usability. *Molecular Biology and Evolution*, 30(4), 772–780.
-- **IQ-TREE**: 
+- **IQ-TREE**:
   - Minh, B. Q., Schmidt, H. A., Chernomor, O., Schrempf, D., Woodhams, M. D., Von Haeseler, A., & Lanfear, R. (2020). IQ-TREE 2: new models and efficient methods for phylogenetic inference in the genomic era. *Molecular Biology and Evolution*, 37(5), 1530-1534.  
   - Chernomor, O., Von Haeseler, A., & Minh, B. Q. (2016). Terrace aware data structure for phylogenomic inference from supermatrices. *Systematic Biology*, 65, 997-1008.  
   - Minh, B. Q., Nguyen, M. A. T., & Von Haeseler, A. (2013). Ultrafast approximation for phylogenetic bootstrap. *Molecular Biology and Evolution*, 30(5), 1188–1195.
-- **R tools**: 
+- **R tools**:
   - R Core Team (2025). R: A Language and Environment for Statistical Computing. R Foundation for Statistical Computing, Vienna, Austria. [https://www.R-project.org/](https://www.R-project.org/)
   - Revell, L. J. (2024). phytools 2.0: an updated R ecosystem for phylogenetic comparative methods (and other things). PeerJ, 12, e16505.
   - Paradis, E., & Schliep, K. (2019). ape 5.0: an environment for modern phylogenetics and evolutionary analyses in R. Bioinformatics, 35(3), 526-528.
