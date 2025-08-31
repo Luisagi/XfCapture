@@ -569,6 +569,10 @@ rule extract_genes_all:
             echo "Completed: $basename" >> {log}
         done
 
+        # Clean auxiliary files
+        find {config[references][xf_genomes]} -type f -name "*.fai" -delete
+        find $(dirname {config[references][probes]}) -type f -name "*.fai" -delete
+
         echo "All genomes processed successfully" >> {log}
         """
 
@@ -616,6 +620,7 @@ rule sort_fasta_to_alignment:
             # Remove temporary files
             rm {output.gene_outdir}/refs_${{gene_id}}.fasta {output.gene_outdir}/cns_${{gene_id}}.fasta
         done
+
         """
 
 # Align and trim genes (**time consuming step**)
@@ -776,6 +781,8 @@ rule phylogeny_phase:
         "--- Phase 2: Phylogenetic analysis for successful samples ---"
     log:
         "logs/phylogeny_phase.log"
+    message:
+        "--- Phase 2: Phylogenetic analysis for successful samples ---"
     shell:
         """
         echo "Phylogenetic Analysis Summary" > {output.completion}
@@ -825,11 +832,4 @@ rule phylogeny_phase:
         else
             echo "SUCCESS: Phylogenetic analysis completed for $successful_count samples" >> {log}
         fi
-        """
-    rule cleanup:
-    message:
-        "--- Cleanup: Removing all auxiliar files from working directory ---"
-    shell:
-        """
-        find . -type f -name "*.fai" -delete
         """
