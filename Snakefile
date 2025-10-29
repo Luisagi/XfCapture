@@ -444,7 +444,7 @@ rule summary_reconstruction:
         """
         unset R_HOME
         export R_LIBS_USER=""
-        export R_LIBS=""
+        export R_LIBS_SITE=""
         Rscript {params.summary_script} {params.stats_dir} {output.summary_out} >> {log} 2>&1
         """
 
@@ -761,7 +761,7 @@ rule plot_tree:
         # Plot tree
         unset R_HOME
         export R_LIBS_USER=""
-        export R_LIBS=""
+        export R_LIBS_SITE=""
         Rscript {params.plot_script} {input.iqtree_tree} {params.plot_prefix} >> {log} 2>&1
         """
 
