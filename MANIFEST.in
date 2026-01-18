@@ -1,0 +1,22 @@
+# Include Snakemake workflow files
+include Snakefile
+include config.yaml
+
+# Include environment files
+recursive-include envs *.yaml
+
+# Include bundled reference sequences archive
+recursive-include data *.tar.gz
+
+# Include utility scripts
+recursive-include utils *.py
+recursive-include utils *.R
+
+# Include documentation
+include README.md
+include LICENSE
+
+# Exclude compiled files
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude *.pyo
