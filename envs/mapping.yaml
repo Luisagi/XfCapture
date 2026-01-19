@@ -4,10 +4,10 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - bcftools=1.23
+  - bcftools=1.22
   - bedtools=2.31.1
   - bwa=0.7.19
-  - samtools=1.23
+  - samtools=1.22
   - seqkit=2.12.0
   - seqtk=1.5
-
+  - gsl=2.7
