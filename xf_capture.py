@@ -189,71 +189,16 @@ def setup_workflow(workflow_dir: str):
             sys.exit(1)
     
     # -------------------------------------------------------------------------
-    # Install conda environments using Snakemake
+    # Conda environments info
     # -------------------------------------------------------------------------
     print("\n" + "="*70)
     print("[Setup] Conda environments...")
     print("="*70)
     
-    # Check for snakemake
-    if not check_snakemake():
-        print("\n[Error] Snakemake not found. Please install Snakemake first.")
-        sys.exit(1)
-    
     conda_prefix = workflow_path / "conda_envs"
-    print(f"[Setup] Installing conda environments to: {conda_prefix}")
-    
-    # Create a temporary config file for Snakemake to parse the Snakefile
-    # The Snakefile requires a config.yaml with specific keys to be parsed
-    import tempfile
-    temp_config = {
-        'directories': {
-            'output_dir': str(workflow_path),
-            'fastq_dir': str(workflow_path)  # Dummy path, not used for env creation
-        },
-        'references': {
-            'xf_genomes': str(ref_seqs_dest / "xf_genomes")
-        }
-    }
-    
-    temp_config_file = workflow_path / "temp_config.yaml"
-    try:
-        with open(temp_config_file, 'w') as f:
-            yaml.dump(temp_config, f, default_flow_style=False)
-        
-        # Use snakemake to create all conda environments at once
-        snakemake_cmd = [
-            "snakemake",
-            "--snakefile", str(SNAKEFILE),
-            "--configfile", str(temp_config_file),
-            "--use-conda",
-            "--conda-prefix", str(conda_prefix),
-            "--conda-create-envs-only",
-            "--cores", "1",
-            "--quiet"
-        ]
-        
-        print(f"[Setup] Running: {' '.join(snakemake_cmd)}")
-        print("[Setup] This may take a while...")
-        
-        # Redirect stdout/stderr to suppress Snakefile parsing output
-        result = subprocess.run(
-            snakemake_cmd, 
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        print("[Setup] ✓ Conda environments installed successfully")
-    except subprocess.CalledProcessError as e:
-        print(f"[Warning] Failed to install conda environments: {e}")
-        if e.stderr:
-            print(f"[Warning] Error details: {e.stderr}")
-        print("[Setup] You may need to run the pipeline with --use-conda to create them.")
-    finally:
-        # Clean up temporary config file
-        if temp_config_file.exists():
-            temp_config_file.unlink()
+    kraken_db_path = workflow_path / "databases" / "kraken2"
+    print(f"[Setup] Conda environments will be installed to: {conda_prefix}")
+    print("[Setup] Environments will be created on first 'xf_capture run'")
     
     # -------------------------------------------------------------------------
     # Download Kraken2 database
@@ -262,34 +207,95 @@ def setup_workflow(workflow_dir: str):
     print("[Setup] Kraken2 database (PlusPF 8GB)...")
     print("="*70)
     
-    kraken_db_path = workflow_path / "databases" / "kraken2"
-    
-    # Check if Kraken2 database is already downloaded (look for hash.k2d file)
+    # Check if Kraken2 database is already downloaded and valid
     kraken_hash_file = kraken_db_path / "hash.k2d"
+    kraken_taxo_file = kraken_db_path / "taxo.k2d"
+    kraken_opts_file = kraken_db_path / "opts.k2d"
+    tarball_file = kraken_db_path / "k2_pluspf_08gb.tar.gz"
     
-    if kraken_hash_file.exists():
+    # Database is complete only if all required files exist
+    db_complete = (kraken_hash_file.exists() and 
+                   kraken_taxo_file.exists() and 
+                   kraken_opts_file.exists())
+    
+    if db_complete:
         print(f"[Setup] ✓ Kraken2 database already exists at: {kraken_db_path}")
         print("[Setup] Skipping download.")
     else:
-        # Download using wget
+        # URLs for database and checksum
         kraken2_db_url = "https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_08_GB_20251015.tar.gz"
-        
-        download_cmd = f"""
-        cd {kraken_db_path} && \\
-        wget -c {kraken2_db_url} -O k2_pluspf_08gb.tar.gz && \\
-        tar -xzf k2_pluspf_08gb.tar.gz && \\
-        rm k2_pluspf_08gb.tar.gz
-        """
+        kraken2_md5_url = "https://genome-idx.s3.amazonaws.com/kraken/pluspf_08_GB_20251015/pluspf_08_GB.md5"
         
         print(f"[Setup] Database will be downloaded to: {kraken_db_path}")
         print("[Setup] This may take a while depending on your internet connection...")
         
-        try:
-            subprocess.run(download_cmd, shell=True, check=True)
-            print("[Setup] ✓ Kraken2 database downloaded successfully")
-        except subprocess.CalledProcessError as e:
-            print(f"[Warning] Failed to download Kraken2 database: {e}")
-            print("[Setup] You can manually download the database later.")
+        import hashlib
+        
+        def verify_md5(file_path, expected_md5):
+            """Verify MD5 checksum of a file."""
+            md5_hash = hashlib.md5()
+            with open(file_path, "rb") as f:
+                for chunk in iter(lambda: f.read(8192), b""):
+                    md5_hash.update(chunk)
+            return md5_hash.hexdigest() == expected_md5
+        
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            try:
+                print(f"[Setup] Download attempt {attempt}/{max_retries}...")
+                
+                # Download MD5 checksum file
+                print("[Setup] Downloading MD5 checksum...")
+                md5_file = kraken_db_path / "expected.md5"
+                subprocess.run(
+                    f"wget -q {kraken2_md5_url} -O {md5_file}",
+                    shell=True, check=True
+                )
+                
+                # Parse expected MD5 (format: "md5sum  filename")
+                expected_md5 = md5_file.read_text().strip().split()[0]
+                print(f"[Setup] Expected MD5: {expected_md5}")
+                
+                # Download database (resume if partial download exists)
+                print("[Setup] Downloading database (this may take a while)...")
+                subprocess.run(
+                    f"cd {kraken_db_path} && wget -c {kraken2_db_url} -O k2_pluspf_08gb.tar.gz",
+                    shell=True, check=True
+                )
+                
+                # Verify MD5 checksum
+                print("[Setup] Verifying download integrity (MD5 checksum)...")
+                if verify_md5(tarball_file, expected_md5):
+                    print("[Setup] ✓ MD5 checksum verified successfully")
+                    
+                    # Extract the database
+                    print("[Setup] Extracting database...")
+                    subprocess.run(
+                        f"cd {kraken_db_path} && tar -xzf k2_pluspf_08gb.tar.gz",
+                        shell=True, check=True
+                    )
+                    
+                    # Clean up
+                    tarball_file.unlink()
+                    md5_file.unlink()
+                    
+                    print("[Setup] ✓ Kraken2 database downloaded and extracted successfully")
+                    break
+                else:
+                    print(f"[Warning] MD5 checksum verification failed (attempt {attempt})")
+                    # Remove corrupted file
+                    if tarball_file.exists():
+                        tarball_file.unlink()
+                    
+                    if attempt == max_retries:
+                        print("[Error] Failed to download valid Kraken2 database after all retries")
+                        print("[Setup] You can manually download the database later.")
+                    
+            except subprocess.CalledProcessError as e:
+                print(f"[Warning] Download failed (attempt {attempt}): {e}")
+                if attempt == max_retries:
+                    print("[Error] Failed to download Kraken2 database after all retries")
+                    print("[Setup] You can manually download the database later.")
     
     # Create configuration file for this setup
     config_file = workflow_path / "xf_capture_config.yaml"
@@ -394,7 +400,7 @@ def run_pipeline(input_dir: str, output_dir: str, workflow_dir: str = None,
                  kraken_db: str = None, cores: int = 16, 
                  kraken_jobs: int = 1, alignment_jobs: int = 5,
                  iqtree_jobs: int = 3, auto: bool = False,
-                 dry_run: bool = False, extra_args: list = None):
+                 extra_args: list = None):
     """
     Run the XfCapture pipeline.
     """
@@ -458,9 +464,6 @@ def run_pipeline(input_dir: str, output_dir: str, workflow_dir: str = None,
     if conda_prefix and conda_prefix.exists():
         snakemake_cmd.extend(["--conda-prefix", str(conda_prefix)])
     
-    if dry_run:
-        snakemake_cmd.append("--dry-run")
-    
     if extra_args:
         snakemake_cmd.extend(extra_args)
     
@@ -501,7 +504,7 @@ def run_pipeline(input_dir: str, output_dir: str, workflow_dir: str = None,
             return
         
         # Ask to continue with phylogeny (unless auto mode)
-        if not auto and not dry_run:
+        if not auto:
             try:
                 response = input("\n[Run] Continue with phylogenetic analysis? (y/N): ")
                 if response.lower() not in ['y', 'yes']:
@@ -581,14 +584,14 @@ Examples:
     )
     
     run_parser.add_argument(
-        "--input_dir",
+        "--input_dir", "-i",
         required=True,
         metavar="PATH",
         help="Directory containing input FASTQ files (paired-end reads)."
     )
     
     run_parser.add_argument(
-        "--output_dir",
+        "--output_dir", "-o",
         required=True,
         metavar="PATH",
         help="Directory for pipeline output files."
@@ -597,7 +600,7 @@ Examples:
     run_parser.add_argument(
         "--workflow_dir",
         metavar="PATH",
-        help="Path to the workflow directory (created with set_workflow). "
+        help="Path to the workflow directory (created with setup). "
              "Contains conda environments and databases."
     )
     
@@ -636,15 +639,10 @@ Examples:
     )
     
     run_parser.add_argument(
-        "--auto",
+        "--no-auto",
         action="store_true",
-        help="Automatically continue with phylogenetic analysis without prompting."
-    )
-    
-    run_parser.add_argument(
-        "--dry_run", "-n",
-        action="store_true",
-        help="Perform a dry run (show what would be done without executing)."
+        default=False,
+        help="Disable automatic continuation with phylogenetic analysis. By default, the pipeline continues automatically. Use --no-auto to require confirmation."
     )
     
     # Parse arguments
@@ -672,8 +670,7 @@ Examples:
             kraken_jobs=args.kraken_jobs,
             alignment_jobs=args.alignment_jobs,
             iqtree_jobs=args.iqtree_jobs,
-            auto=args.auto,
-            dry_run=args.dry_run,
+            auto=not args.no_auto,
             extra_args=extra_args if extra_args else None
         )
 

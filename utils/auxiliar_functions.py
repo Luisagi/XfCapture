@@ -31,7 +31,9 @@ def get_samples(input_dir, valid_extensions, not_allowed_chars):
     
     if not fastq_files:
         print(f"No FASTQ files found with valid extensions: {valid_extensions}")
-        sys.exit(1)
+        # Return empty dict instead of failing - allows Snakemake to parse
+        # the workflow for --conda-create-envs-only without requiring input files
+        return {}
     
     print(f"Found {len(fastq_files)} FASTQ files")
     
