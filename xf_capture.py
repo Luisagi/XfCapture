@@ -203,21 +203,39 @@ def setup_workflow(workflow_dir: str):
     conda_prefix = workflow_path / "conda_envs"
     print(f"[Setup] Installing conda environments to: {conda_prefix}")
     
-    # Use snakemake to create all conda environments at once
-    snakemake_cmd = [
-        "snakemake",
-        "--snakefile", str(SNAKEFILE),
-        "--use-conda",
-        "--conda-prefix", str(conda_prefix),
-        "--conda-create-envs-only",
-        "--cores", "1",
-        "--quiet"
-    ]
+    # Create a temporary config file for Snakemake to parse the Snakefile
+    # The Snakefile requires a config.yaml with specific keys to be parsed
+    import tempfile
+    temp_config = {
+        'directories': {
+            'output_dir': str(workflow_path),
+            'fastq_dir': str(workflow_path)  # Dummy path, not used for env creation
+        },
+        'references': {
+            'xf_genomes': str(ref_seqs_dest / "xf_genomes")
+        }
+    }
     
-    print(f"[Setup] Running: {' '.join(snakemake_cmd)}")
-    print("[Setup] This may take a while...")
-    
+    temp_config_file = workflow_path / "temp_config.yaml"
     try:
+        with open(temp_config_file, 'w') as f:
+            yaml.dump(temp_config, f, default_flow_style=False)
+        
+        # Use snakemake to create all conda environments at once
+        snakemake_cmd = [
+            "snakemake",
+            "--snakefile", str(SNAKEFILE),
+            "--configfile", str(temp_config_file),
+            "--use-conda",
+            "--conda-prefix", str(conda_prefix),
+            "--conda-create-envs-only",
+            "--cores", "1",
+            "--quiet"
+        ]
+        
+        print(f"[Setup] Running: {' '.join(snakemake_cmd)}")
+        print("[Setup] This may take a while...")
+        
         # Redirect stdout/stderr to suppress Snakefile parsing output
         result = subprocess.run(
             snakemake_cmd, 
@@ -232,6 +250,10 @@ def setup_workflow(workflow_dir: str):
         if e.stderr:
             print(f"[Warning] Error details: {e.stderr}")
         print("[Setup] You may need to run the pipeline with --use-conda to create them.")
+    finally:
+        # Clean up temporary config file
+        if temp_config_file.exists():
+            temp_config_file.unlink()
     
     # -------------------------------------------------------------------------
     # Download Kraken2 database
