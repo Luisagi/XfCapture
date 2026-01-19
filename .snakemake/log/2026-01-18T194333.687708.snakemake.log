@@ -1,2 +1,0 @@
-WorkflowError in file "/home/luisagi/github/XfCapture/Snakefile", line 44:
-Workflow defines configfile config.yaml but it is not present or accessible (full checked path: /home/luisagi/github/XfCapture/config.yaml).
