@@ -160,6 +160,7 @@ rule fastp:
             --detect_adapter_for_pe \
             --length_required {params.min_length} \
             --qualified_quality_phred {params.min_quality} \
+            --n_base_limit 0 \
             --cut_front \
             --cut_right \
             --thread {resources.threads} \
@@ -336,7 +337,8 @@ rule extract_xf_reads:
             -o {params.tmp_r1} \
             -o2 {params.tmp_r2} \
             --fastq-output \
-            --include-children
+            --include-children \
+            > /dev/null 2>&1
 
         # Compress output files
         pigz -c {params.tmp_r1} > {output.r1}
@@ -434,9 +436,7 @@ rule bam_stats:
     shell:
         """
         samtools index {input.bam}
-        samtools idxstats {input.bam} | \
-            sed '1i #Refsequence\tSequence_length\tMapped_read_segments\tUnmapped_read_segments' \
-            > {output.stats}
+        (echo -e "#Refsequence\tSequence_length\tMapped_read_segments\tUnmapped_read_segments"; samtools idxstats {input.bam}) > {output.stats}
         """
 
 
