@@ -333,14 +333,11 @@ Summary:
 
 To run the pipeline, simply use:
   xf_capture run --input_dir <fastq_dir> --output_dir <results_dir>
-
-The workflow directory is now saved and will be used automatically.
-You can override it with --workflow_dir if needed.
     """)
 
 
 def generate_config(input_dir: str, output_dir: str, workflow_dir: str = None, 
-                    kraken_db: str = None, threads: int = 8) -> Path:
+                    kraken_db: str = None, threads: int = 8, k2_mapping_memory: bool = False) -> Path:
     """
     Generate a temporary config file for the run.
     
@@ -359,7 +356,7 @@ def generate_config(input_dir: str, output_dir: str, workflow_dir: str = None,
         },
         "kraken2": {
             "database": kraken_db if kraken_db else "/path/to/kraken2/database",
-            "memory_mapping": False,
+            "memory_mapping": k2_mapping_memory,
         }
     }
     
@@ -400,6 +397,7 @@ def run_pipeline(input_dir: str, output_dir: str, workflow_dir: str = None,
                  kraken_db: str = None, cores: int = 16, 
                  kraken_jobs: int = 1, alignment_jobs: int = 5,
                  iqtree_jobs: int = 3, auto: bool = False,
+                 k2_mapping_memory: bool = False,
                  extra_args: list = None):
     """
     Run the XfCapture pipeline.
@@ -437,7 +435,8 @@ def run_pipeline(input_dir: str, output_dir: str, workflow_dir: str = None,
         output_dir=output_dir,
         workflow_dir=workflow_dir,
         kraken_db=kraken_db,
-        threads=cores
+        threads=cores,
+        k2_mapping_memory=k2_mapping_memory
     )
     print(f"[Run] Config file:      {config_path}")
     
@@ -455,10 +454,10 @@ def run_pipeline(input_dir: str, output_dir: str, workflow_dir: str = None,
         "--configfile", str(config_path),
         "--cores", str(cores),
         "--use-conda",
-        "--resources", 
+        "--resources",
         f"kraken_jobs={kraken_jobs}",
         f"alignment_jobs={alignment_jobs}",
-        f"iqtree_jobs={iqtree_jobs}",
+        f"iqtree_jobs={iqtree_jobs}"
     ]
     
     if conda_prefix and conda_prefix.exists():
@@ -608,6 +607,13 @@ Examples:
         "--kraken_db",
         metavar="PATH",
         help="Path to Kraken2 database (overrides workflow_dir setting)."
+    )
+
+    run_parser.add_argument(
+        "--k2-mapping-memory",
+        action="store_true",
+        default=False,
+        help="If set, avoids loading entire kraken2 database into RAM (default: False)."
     )
     
     run_parser.add_argument(

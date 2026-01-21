@@ -784,8 +784,8 @@ rule prepare_alignment_files:
                 > {output.gene_outdir}/cns_${{gene_id}}.fasta
 
             # Standardize headers
-            sed -i "s/^>.*__/>/g" {output.gene_outdir}/refs_${{gene_id}}.fasta
-            sed -i "s/^>.*/>sample_{wildcards.sample}/g" {output.gene_outdir}/cns_${{gene_id}}.fasta
+            perl -i.bak -pe 's/^>.*__/>/g' {output.gene_outdir}/refs_${{gene_id}}.fasta && rm {output.gene_outdir}/refs_${{gene_id}}.fasta.bak
+            perl -i.bak -pe 's/^>.*/>sample_{wildcards.sample}/g' {output.gene_outdir}/cns_${{gene_id}}.fasta && rm {output.gene_outdir}/cns_${{gene_id}}.fasta.bak
 
             # Combine into single file
             cat {output.gene_outdir}/refs_${{gene_id}}.fasta \
@@ -806,11 +806,11 @@ rule align_and_trim_genes:
     poorly aligned regions to improve phylogenetic inference.
     """
     input:
-        gene_ids = "05.phylogenetic_trees/{sample}/genes_ids.txt",
-        genes_dir = "05.phylogenetic_trees/{sample}/genes",
+        gene_ids   = "05.phylogenetic_trees/{sample}/genes_ids.txt",
+        genes_dir  = "05.phylogenetic_trees/{sample}/genes",
         checkpoint = "03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt"
     output:
-        summary = "05.phylogenetic_trees/{sample}/alignment_summary.txt",
+        summary   = "05.phylogenetic_trees/{sample}/alignment_summary.txt",
         align_dir = directory("05.phylogenetic_trees/{sample}/alignments")
     resources:
         threads = 4,
