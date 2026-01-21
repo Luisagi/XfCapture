@@ -253,6 +253,8 @@ rule download_taxdump:
         tax_dump = temp(directory("02.tax-classification/tax_dump"))
     conda:
         "envs/taxa-classification.yaml"
+    priority: 
+        10
     log:
         "logs/download_taxdump.log"
     message:
@@ -260,8 +262,10 @@ rule download_taxdump:
     shell:
         """
         # Remove any corrupted taxdmp.zip from previous failed attempts
-        rm -f taxdmp.zip
-        
+        if [ -f taxdmp.zip ]; then
+            rm -f taxdmp.zip
+        fi
+
         # Download and extract taxonomy database
         retaxdump --nodespath {output.tax_dump} > {log} 2>&1
         

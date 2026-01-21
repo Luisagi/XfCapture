@@ -337,7 +337,7 @@ To run the pipeline, simply use:
 
 
 def generate_config(input_dir: str, output_dir: str, workflow_dir: str = None, 
-                    kraken_db: str = None, threads: int = 8, k2_mapping_memory: bool = False) -> Path:
+                    kraken_db: str = None, threads: int = 8, k2_mapping_memory: bool = True) -> Path:
     """
     Generate a temporary config file for the run.
     
@@ -397,7 +397,7 @@ def run_pipeline(input_dir: str, output_dir: str, workflow_dir: str = None,
                  kraken_db: str = None, cores: int = 16, 
                  kraken_jobs: int = 1, alignment_jobs: int = 5,
                  iqtree_jobs: int = 3, auto: bool = False,
-                 k2_mapping_memory: bool = False,
+                 k2_mapping_memory: bool = True,
                  extra_args: list = None):
     """
     Run the XfCapture pipeline.
