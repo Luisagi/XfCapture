@@ -27,8 +27,14 @@
 import os
 import sys
 import re
+from pathlib import Path
 
-from utils.auxiliar_functions import (
+# Add utils directory to Python path
+WORKFLOW_DIR = Path(workflow.basedir).resolve()
+UTILS_DIR = WORKFLOW_DIR.parent / "utils"
+sys.path.insert(0, str(UTILS_DIR.parent))
+
+from xf_capture.utils.auxiliar_functions import (
     get_samples,
     get_r1,
     get_r2,
@@ -588,7 +594,7 @@ rule summary_reconstruction:
         summary_out = "03.probes_reconstruction/reconstruction_summary.xlsx"
     params:
         stats_dir = "03.probes_reconstruction/stats/",
-        summary_script = workflow.basedir + "/utils/reconstruction_summary.R"
+        summary_script = str(UTILS_DIR / "reconstruction_summary.R")
     conda:
         "envs/r_tools.yaml"
     log:
@@ -943,7 +949,7 @@ rule plot_tree:
     output:
         tree_png = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_tree.png"
     params:
-        plot_script = workflow.basedir + "/utils/plot_tree.R",
+        plot_script = str(UTILS_DIR / "plot_tree.R"),
         plot_prefix = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}"
     conda:
         "envs/r_tools.yaml"
