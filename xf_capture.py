@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-XfCapture - A Snakemake-based pipeline for Xylella fastidiosa genomic analysis
+Filename: xf_capture.py
+Author: Luis F. Arias-Giraldo
+Description: 
+    XfCapture - Pipeline for analyzing Xylella fastidiosa targeted sequence
+    capture enrichment (Xf-TSCE) sequencing data.
+
+License: MIT License
+Contact: lfarias.giraldo@gmail.com
 
 Usage:
     xf_capture setup --dir <directory>
     xf_capture run --input_dir <dir> --output_dir <dir> [options]
 
 Examples:
-    # Setup the workflow (install conda environments and download databases)
+    # Setup the workflow (define path for conda environments and databases)
     xf_capture setup --dir /path/to/workflow_data
 
     # Run the pipeline
@@ -33,26 +41,6 @@ REFERENCE_SEQS_DIR = SCRIPT_DIR / "reference_seqs"
 # User configuration directory (persistent settings)
 USER_CONFIG_DIR = Path.home() / ".xf_capture"
 USER_CONFIG_FILE = USER_CONFIG_DIR / "config.yaml"
-
-
-def print_header():
-    """Print the XfCapture header."""
-    header = """
-╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║   ██╗  ██╗███████╗ ██████╗ █████╗ ██████╗ ████████╗██╗   ██╗██████╗  ║
-║   ╚██╗██╔╝██╔════╝██╔════╝██╔══██╗██╔══██╗╚══██╔══╝██║   ██║██╔══██╗ ║
-║    ╚███╔╝ █████╗  ██║     ███████║██████╔╝   ██║   ██║   ██║██████╔╝ ║
-║    ██╔██╗ ██╔══╝  ██║     ██╔══██║██╔═══╝    ██║   ██║   ██║██╔══██╗ ║
-║   ██╔╝ ██╗██║     ╚██████╗██║  ██║██║        ██║   ╚██████╔╝██║  ██║ ║
-║   ╚═╝  ╚═╝╚═╝      ╚═════╝╚═╝  ╚═╝╚═╝        ╚═╝    ╚═════╝ ╚═╝  ╚═╝ ║
-║                                                                      ║
-║   Xylella fastidiosa Capture Sequencing Analysis Pipeline            ║
-║                                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝
-    """
-    print(header)
-
 
 def check_conda():
     """Check if conda/mamba is available."""
@@ -656,7 +644,6 @@ Examples:
     
     # Show help if no command provided
     if args.command is None:
-        print_header()
         parser.print_help()
         sys.exit(0)
     
@@ -679,7 +666,6 @@ Examples:
             auto=not args.no_auto,
             extra_args=extra_args if extra_args else None
         )
-
 
 if __name__ == "__main__":
     main()

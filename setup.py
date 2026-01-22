@@ -12,7 +12,7 @@ setup(
     author="Luis F. Arias-Giraldo",
     description=
     "This pipeline processes paired-end sequencing data from \
-    X. fastidiosa targeted sequence capture enrichment (Xf-TSCE) ",
+    X. fastidiosa targeted sequence capture enrichment (Xf-TSCE)",
     url="https://github.com/luisagi/XfCapture",
     license="MIT",
     
