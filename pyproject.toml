@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xf_capture"
+version = "0.0.2"
+description = "Pipeline for X. fastidiosa targeted sequence capture enrichment (Xf-TSCE)"
+authors = [
+    { name = "Luis F. Arias-Giraldo" }
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.8"
+
+urls = { "Homepage" = "https://github.com/luisagi/XfCapture" }
+
+dependencies = [
+    "pyyaml>=5.0",
+    "snakemake>=9.0"
+]
+
+[project.scripts]
+xf_capture = "xf_capture.cli:main"
+
+# --- setuptools configuration ---
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+xf_capture = [
+    "workflows/**/*",
+    "resources/**/*",
+    "utils/*.R",
+    "utils/*.py"
+]

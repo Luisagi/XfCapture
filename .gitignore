@@ -1,7 +1,35 @@
-
 # Python packaging
 *.egg-info/
 dist/
 build/
 __pycache__/
+*.pyc
+*.pyo
+
+# Snakemake
 .snakemake/*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Generated documentation
+ARCHITECTURE.html
+ARCHITECTURE_files/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project specific
+*.log
