@@ -1,25 +1,18 @@
-
-
 # XfCapture
 
 
-<table>
-  <tr>
-    <td style="width:66%; vertical-align:middle; font-size:1.1em;">
-      A scalable Snakemake pipeline for analyzing <i>Xylella fastidiosa</i> targeted sequence capture enrichment (<b>Xf</b>-TSCE) sequencing data, featuring automated quality control, targeted gene reconstruction, MLST typing, and phylogenetic analysis.
-    </td>
-    <td style="width:33%; text-align:center; vertical-align:middle;">
-      <img src="misc/logo.png" alt="XfCapture Logo" width="200"/>
-    </td>
-  </tr>
-</table>
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Snakemake](https://img.shields.io/badge/snakemake-≥9.5-brightgreen.svg)](https://snakemake.readthedocs.io/en/stable/)
-[![Python](https://img.shields.io/badge/python-3.11--3.12-blue.svg)](https://www.python.org/)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥9.0-brightgreen.svg)](https://snakemake.readthedocs.io/en/stable/)
+[![Python](https://img.shields.io/badge/python-≥3.8-blue.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/Luisagi/XfCapture)
 
----
+
+<img src="misc/logo.png" align="right" width="200"/></a>
+<hr>
+
+
+> A scalable Snakemake pipeline for analyzing <i>Xylella fastidiosa</i> targeted sequence capture enrichment (<b>Xf</b>-TSCE) sequencing data.
+
 
 ## Table of Contents
 
@@ -29,11 +22,9 @@
 - [Output Structure](#output-structure)
 - [Configuration](#configuration)
 - [Usage](#usage)
-- [Citation](#citation)
 - [References](#references)
 - [Authors and Contributors](#authors-and-contributors)
 - [License](#license)
-
 
 ---
 
@@ -50,13 +41,13 @@ Before installing, ensure your system meets these requirements:
 
 The following software must be installed:
 
-- [Snakemake](https://snakemake.readthedocs.io/) ≥ 9.5.1
-- [Python](https://www.python.org/) ≥ 3.11 and ≤ 3.12
+- [Snakemake](https://snakemake.readthedocs.io/) ≥ 9.0
+- [Python](https://www.python.org/) ≥ 3.8
 - [Conda](https://docs.conda.io/en/latest/) or [Mamba](https://github.com/mamba-org/mamba)
 
 ```bash
 # optional, if not installed already
-conda create -c conda-forge -c bioconda -n xfcapture snakemake=>9.0 python=>3.11
+conda create -c conda-forge -c bioconda -n xfcapture snakemake>=9.0 python>=3.11
 
 # activate environment
 conda activate xfcapture
@@ -68,11 +59,29 @@ conda activate xfcapture
 git clone https://github.com/Luisagi/XfCapture.git
 cd XfCapture/
 
-# Install package
+# Install package in editable mode for development
 pip install -e .
 
 # Verify installation
 xf_capture --help
+```
+
+Condensed help (run `xf_capture` to see full help):
+
+```bash
+xf_capture
+usage: xf_capture [-h] <command> ...
+
+Available commands:
+  setup     Prepare workflow resources (references, databases, configs)
+  run       Run the XfCapture Snakemake pipeline
+
+Typical usage:
+  xf_capture setup --dir /path/to/xf_workflow
+  xf_capture run -i reads/ -o results/
+
+For help on a specific command:
+  xf_capture <command> --help
 ```
 
 ---
@@ -113,30 +122,31 @@ The XfCapture pipeline is organized into two main phases. The first phase focuse
 
 Each output directory corresponds to a key analysis stage:
 
-- **01.pre-processing/**: Contains quality control reports and FASTQ files processed by fastp.
-- **02.tax-classification/**: Includes taxonomic classification results from Kraken2 and Recentrifuge.
-- **03.probes_reconstruction/**: Stores reconstructed gene sequences for each sample, along with reconstruction statistics.
-- **04.mlst-typing/**: Presents MLST typing results, both individual and summary files.
-- **05.phylogenetic_trees/**: Holds alignments, phylogenetic trees, and their visualizations generated from successfully reconstructed samples.
+- **01.pre-processing/**: Contains an HTML quality-control report of FASTQ files processed by `fastp` and (optionally) trimmed reads in `qc_report_data/`.
+- **02.tax-classification/**: Includes taxonomic classification results from `Kraken2` and `Recentrifuge` (reports and per-taxid outputs).
+- **03.probes_reconstruction/**: Stores reconstructed gene/probe sequences per sample (FASTA) and reconstruction statistics (CSV).
+- **04.mlst-typing/**: Presents `MLST` typing results (per-sample reports and a combined `mlst_summary.csv`).
+- **05.phylogenetic_trees/**: Holds alignments (FASTA), phylogenetic trees (Newick), and visualizations produced from successfully reconstructed samples.
 
 ```bash
 output_dir/
-├── 01.pre-processing/           # fastp QC reports and trimmed reads
-│   ├── sample1.fastp.html
-│   └── sample1.fastp.json
-├── 02.tax-classification/       # Kraken2 and Recentrifuge results
-│   ├── sample1.kraken2.report
-│   └── sample1.html
-├── 03.probes_reconstruction/    # Reconstructed gene sequences
-│   ├── sample1.consensus.fasta
-│   └── sample1.stats.txt
-├── 04.mlst-typing/              # MLST typing results
-│   ├── sample1.mlst.tsv
-│   └── mlst_summary.tsv
-└── 05.phylogenetic_trees/       # Phylogenetic analysis
-    ├── alignment.fasta
-    ├── tree.newick
-    └── tree.pdf
+├── 01.pre-processing/            # fastp QC reports and trimmed reads
+│   ├── qc_report.html
+│   └── qc_report_data/           # fastp JSON/HTML assets, per-sample reports
+├── 02.tax-classification/        # Taxonomic classification reports
+│   ├── recentrifuge_report.html
+│   ├── recentrifuge_report.xlsx
+│   └── xf_taxid_2370/            # per-taxid outputs (FASTQ)
+├── 03.probes_reconstruction/     # Reconstructed gene sequences & stats
+│   ├── sampleA/                  # sample-level reconstructed FASTA and stats
+│   └── sampleB/
+├── 04.mlst-typing/               # MLST typing results
+│   └── mlst_summary.csv
+├── 05.phylogenetic_trees/        # Phylogenetic analysis per sample
+│   ├── summary.txt
+│   ├── sample_1/                 # per-sample alignments, trees, plots
+│   └── sample_n/
+└── logs/                         # Log files for each step (rule/sample.log)
 ```
 
 ---
@@ -177,9 +187,23 @@ See [kraken2 AWS indexes](https://benlangmead.github.io/aws-indexes/k2).
 
 ### 2. Run the pipeline
 
+There is a mock dataset available in the clone repository `test_data/` folder for testing purposes.
 
+```bash
+xf_capture run -i test_data/ -o output_dir/ --cores 8 --use-conda
+```
 
 ---
+
+## Troubleshooting
+
+- Memory errors loading Kraken2 DB: use the 8GB database (`--k2-db "8Gb"`) or run on a machine with >=64 GB RAM. If you have limited RAM, consider running only sample-level steps first.
+- Missing read pairs or unrecognized file names: ensure FASTQ names follow one of the supported patterns and that R1/R2 pairs are present in the input directory.
+- Rule failures: inspect `output_dir/logs/` for per-rule logs.
+
+
+If a database download fails during `xf_capture setup`, you can manually download the Kraken2 index and place it under `databases/kraken2/` as described above.
+
 
 ## References
 
@@ -190,6 +214,9 @@ See [kraken2 AWS indexes](https://benlangmead.github.io/aws-indexes/k2).
 
 - **fastp**:  
   Chen, S., Zhou, Y., Chen, Y., & Gu, J. (2018). fastp: An ultra-fast all-in-one FASTQ preprocessor. *Bioinformatics*, 34(17), i884–i890.
+
+- **multiQC**:  
+  Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. *Bioinformatics*, 32(19), 3047-3048.
 
 - **Kraken2**:  
   Wood, D. E., Lu, J., & Langmead, B. (2019). Improved metagenomic analysis with Kraken 2. *Genome Biology*, 20(1), 257.  
@@ -230,27 +257,24 @@ See [kraken2 AWS indexes](https://benlangmead.github.io/aws-indexes/k2).
 
 ---
 
-### Contact
-
-For questions, suggestions, or collaboration:
-- Open an [issue](https://github.com/Luisagi/XfCapture/issues)
-
----
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
+## Authors and Contributors
+
+- Luis F. Arias-Giraldo (ORCID: 0000-0003-4861-8064)
+- Maria P. Velasco-Amo  (ORCID: 0000-0001-7176-0435)
+- Blanca B. Landa       (ORCID: 0000-0002-9511-3731)
+
 ## Acknowledgments
 
 This work was funded by the European Union's Horizon Europe research and innovation programme under **BeXyl Grant Agreement 101060593**.
 
-We thank:
-- The *Xylella fastidiosa* research community
-- The Snakemake development team
-- All developers of the bioinformatics tools integrated in this pipeline
+> We thank:
+The *Xylella fastidiosa* research community and all developers of the bioinformatics tools integrated in this pipeline.
 
 ---
 
