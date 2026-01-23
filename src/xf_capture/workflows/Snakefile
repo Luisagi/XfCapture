@@ -107,7 +107,7 @@ rule all:
     """
     input:
         # Quality control outputs
-        qc_report = "01.pre-processing/quality_control_report.html",
+        qc_report = "01.pre-processing/qc_report.html",
 
         # Taxonomic classification outputs
         rcf_report = "02.tax-classification/recentrifuge_report.html",
@@ -123,7 +123,7 @@ rule all:
         unmapped_R2 = expand("03.probes_reconstruction/unmapped/{sample}_unmapped_R2.fastq.gz", sample=SAMPLES),
 
         # MLST and checkpoint outputs
-        mlst = "04.mlst-typing/mlst_identification.csv",
+        mlst = "04.mlst-typing/mlst_summary.csv",
         checkpoint = expand("03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt", sample=SAMPLES)
 
 
@@ -189,7 +189,7 @@ rule multiqc:
     input:
         expand("01.pre-processing/{sample}_fastp.json", sample=SAMPLES)
     output:
-        report = "01.pre-processing/quality_control_report.html"
+        report = "01.pre-processing/qc_report.html"
     conda:
         "envs/qc.yaml"
     log:
@@ -199,7 +199,7 @@ rule multiqc:
     shell:
         """
         multiqc 01.pre-processing/ \
-            --filename quality_control_report.html \
+            --filename qc_report.html \
             --outdir 01.pre-processing/ \
             --force \
             > {log} 2>&1
@@ -659,7 +659,7 @@ rule mlst_typing:
     input:
         consensus = expand("03.probes_reconstruction/consensus/{sample}_cns.fasta", sample=SAMPLES)
     output:
-        mlst = "04.mlst-typing/mlst_identification.csv"
+        mlst = "04.mlst-typing/mlst_summary.csv"
     resources:
         threads = 8
     conda:
@@ -975,7 +975,7 @@ rule phylogeny_phase:
     """
     input:
         # Ensure Phase 1 is complete
-        mlst = "04.mlst-typing/mlst_identification.csv",
+        mlst = "04.mlst-typing/mlst_summary.csv",
         reconstruction_check = expand("03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt", sample=SAMPLES),
 
         # Reference genome extractions
