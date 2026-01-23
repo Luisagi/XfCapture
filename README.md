@@ -5,10 +5,10 @@
 
 <table>
   <tr>
-    <td style="width:80%; vertical-align:middle; font-size:1.1em;">
-      > A scalable Snakemake pipeline for analyzing <i>Xylella fastidiosa</i> targeted sequence capture enrichment (<b>Xf</b>-TSCE) sequencing data, featuring automated quality control, targeted gene reconstruction, MLST typing, and phylogenetic analysis.
+    <td style="width:66%; vertical-align:middle; font-size:1.1em;">
+      A scalable Snakemake pipeline for analyzing <i>Xylella fastidiosa</i> targeted sequence capture enrichment (<b>Xf</b>-TSCE) sequencing data, featuring automated quality control, targeted gene reconstruction, MLST typing, and phylogenetic analysis.
     </td>
-    <td style="width:20%; text-align:center; vertical-align:middle;">
+    <td style="width:33%; text-align:center; vertical-align:middle;">
       <img src="misc/logo.png" alt="XfCapture Logo" width="200"/>
     </td>
   </tr>
