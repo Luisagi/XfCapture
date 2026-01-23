@@ -6,6 +6,9 @@ __pycache__/
 *.pyc
 *.pyo
 
+# README artifacts
+README_files/*
+
 # Snakemake
 .snakemake/*
 
