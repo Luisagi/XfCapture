@@ -5,6 +5,7 @@ build/
 __pycache__/
 *.pyc
 *.pyo
+.editorconfig
 
 # README artifacts
 README_files/*
