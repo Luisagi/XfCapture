@@ -11,11 +11,12 @@ suppressMessages({
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) < 2) {
-  stop("Usage: Rscript plot_tree.R <tree_file> <tree_name>")
+  stop("Usage: Rscript plot_tree.R <tree_file> <tree_name> <sample_name>")
 }
 
-tree_file <- args[1]   # Path to the input tree file
-tree_name <- args[2]   # Name identifier for output file
+tree_file   <- args[1]   # Path to the input tree file
+tree_name   <- args[2]   # Name identifier for output file
+sample_name <- args[3]   # Sample name to highlight in the tree
 
 
 # ------------------------------
@@ -42,7 +43,7 @@ tree_mid <- ladderize(tree_mid, right = FALSE)
 # ------------------------------
 tip_data <- data.frame(
   label = tree_mid$tip.label,
-  highlight = grepl("sample", tree_mid$tip.label)  # TRUE if "sample" is in the name
+  highlight = grepl(sample_name, tree_mid$tip.label)  # TRUE if "sample" is in the name
 )
 
 # ------------------------------
