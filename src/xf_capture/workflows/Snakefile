@@ -2,8 +2,6 @@
 # XfCapture Pipeline - Snakemake Workflow
 # ==============================================================================
 #
-# A comprehensive pipeline for Xylella fastidiosa capture sequencing analysis.
-#
 # Pipeline Phases:
 #   Phase 1 (rule all):
 #     - Quality control and read trimming
@@ -661,7 +659,7 @@ rule mlst_typing:
     output:
         mlst = "04.mlst-typing/mlst_summary.csv"
     resources:
-        threads = 8
+        threads = 4
     conda:
         "envs/mlst.yaml"
     log:
@@ -795,7 +793,8 @@ rule prepare_alignment_files:
 
             # Standardize headers
             perl -i.bak -pe 's/^>.*__/>/g' {output.gene_outdir}/refs_${{gene_id}}.fasta && rm {output.gene_outdir}/refs_${{gene_id}}.fasta.bak
-            perl -i.bak -pe 's/^>.*/>sample_{wildcards.sample}/g' {output.gene_outdir}/cns_${{gene_id}}.fasta && rm {output.gene_outdir}/cns_${{gene_id}}.fasta.bak
+            # perl -i.bak -pe 's/^>.*/>sample_{wildcards.sample}/g' {output.gene_outdir}/cns_${{gene_id}}.fasta && rm {output.gene_outdir}/cns_${{gene_id}}.fasta.bak
+            perl -i.bak -pe 's/^>.*/>{wildcards.sample}/g' {output.gene_outdir}/cns_${{gene_id}}.fasta && rm {output.gene_outdir}/cns_${{gene_id}}.fasta.bak
 
             # Combine into single file
             cat {output.gene_outdir}/refs_${{gene_id}}.fasta \
@@ -950,7 +949,8 @@ rule plot_tree:
         tree_png = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_tree.png"
     params:
         plot_script = str(UTILS_DIR / "plot_tree.R"),
-        plot_prefix = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}"
+        plot_prefix = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}",
+        sample_name = "{sample}"
     conda:
         "envs/r_tools.yaml"
     log:
@@ -962,7 +962,12 @@ rule plot_tree:
         unset R_HOME
         export R_LIBS_USER=""
         export R_LIBS_SITE=""
-        Rscript {params.plot_script} {input.iqtree_tree} {params.plot_prefix} >> {log} 2>&1
+        Rscript \
+            {params.plot_script} \
+            {input.iqtree_tree} \
+            {params.plot_prefix} \
+            {params.sample_name} \
+            >> {log} 2>&1
         """
 
 
