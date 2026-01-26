@@ -1,31 +1,32 @@
-# ==============================================================================
+
+# ===============================================================================
 # XfCapture Pipeline - Snakemake Workflow
-# ==============================================================================
+# ===============================================================================
 #
-# Pipeline Phases:
-#   Phase 1 (rule all):
-#     - Quality control and read trimming
-#     - Taxonomic classification
-#     - Probe-based sequence reconstruction
-#     - MLST typing
+# PHASE 1 (rule all):
+#   - Quality control & read trimming
+#   - Taxonomic classification
+#   - Probe-based sequence reconstruction
+#   - MLST typing
 #
-#   Phase 2 (rule phylogeny_phase):
-#     - Gene extraction from reference genomes
-#     - Multiple sequence alignment
-#     - Phylogenetic reconstruction
-#     - Tree visualization
-#
-# ==============================================================================
+# PHASE 2 (rule phylogeny_phase):
+#   - Gene extraction from references
+#   - Multiple sequence alignment
+#   - Phylogenetic reconstruction
+#   - Tree visualization
+# ===============================================================================
 
 
-# ------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Imports and Configuration
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 import os
 import sys
 import re
 from pathlib import Path
+
 
 # Add utils directory to Python path
 WORKFLOW_DIR = Path(workflow.basedir).resolve()
@@ -44,45 +45,54 @@ from xf_capture.utils.auxiliar_functions import (
     get_successful_samples
 )
 
+
 # Load configuration file
 configfile: 'config.yaml'
 
 
-# ------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Global Variables
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 # Working directory and input paths
 workdir: config['directories']['output_dir']
 INPUT_DIR = config['directories']['fastq_dir']
 XF_REFS = config['references']['xf_genomes']
 
+
 # Sample naming constraints
 NOT_ALLOWED_CHARS = set("_*#@%^/! ?&:;|<>")
 VALID_EXTENSIONS = (".fastq", ".fq", ".fastq.gz", ".fq.gz")
 
 
-# ------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Sample Discovery
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 # Get paired-end samples from input directory
 SAMPLES_DICT = get_samples(INPUT_DIR, VALID_EXTENSIONS, NOT_ALLOWED_CHARS)
 SAMPLES = SAMPLES_DICT.keys()
+
 
 # Display discovered samples
 print(f"\nTotal samples found: {len(SAMPLES)}")
 for sample, (r1, r2) in SAMPLES_DICT.items():
     print(f"  - {sample}:\n      R1 → {r1}\n      R2 → {r2}")
 
+
 # Get reference genomes for phylogenetic analysis
 XF_DICT = get_fasta_files(XF_REFS)
 XF_GENOMES = XF_DICT.keys()
 
 
-# ------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 # Helper Functions
-# ------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 def get_r1_wrapper(wildcards):
     """Wrapper function to retrieve R1 file path for a given sample."""
@@ -94,9 +104,10 @@ def get_r2_wrapper(wildcards):
     return get_r2(wildcards, SAMPLES_DICT)
 
 
-# ==============================================================================
+
+# ===============================================================================
 # PHASE 1: Main Pipeline (QC → Taxonomy → Reconstruction → MLST)
-# ==============================================================================
+# ===============================================================================
 
 rule all:
     """
