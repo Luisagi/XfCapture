@@ -163,6 +163,7 @@ output_dir/
 Create a working directory where the pipeline will store all required references, probe files, and the Kraken2 database. This directory can be located anywhere on your system.
 
 XfCapture uses two pre-built Kraken2 databases:
+
 - **8 GB** (default): suitable for machines with limited memory.
 - **16 GB** (recommended): requires ≥64 GB RAM and provides improved classification performance.
 
@@ -171,8 +172,9 @@ Loading the Kraken2 database is the most memory-intensive step of the pipeline, 
 ```bash
 usage: xf_capture setup [-h] --dir  [--k2-db ]
 
-Prepare the XfCapture workflow environment. This command initializes the workflow directory, extracts 
-reference sequences, downloads required databases (i.e. Kraken2), and stores user-specific configuration.
+Prepare the XfCapture workflow environment. This command initializes the workflow directory, 
+extracts reference sequences, downloads required databases (i.e. Kraken2), and stores 
+user-specific configuration.
 
 options:
   -h, --help  show this help message and exit
@@ -182,8 +184,8 @@ options:
 
 
 ```bash
-# Set up directories and config (choose 16Gb or 8Gb for the database)
-xf_capture setup --dir /path/to/xf_capture_db --k2-db "16Gb"
+# Set up directories and config (choose 16GB or 8GB for the database)
+xf_capture setup --dir /path/to/xf_capture_db --k2-db "16GB"
 ```
 
 This command creates the following structure:
