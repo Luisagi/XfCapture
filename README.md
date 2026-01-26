@@ -109,11 +109,11 @@ input_fastq_dir/
 
 The pipeline automatically recognizes multiple naming conventions:
 
-| Format | Example | Sample Name |
-|--------|---------|-------------|
-| Standard | `ABC123_R1.fastq.gz` | ABC123 |
-| CASAVA | `ABC123_S1_L001_R1_001.fastq.gz` | ABC123 |
-| Simple | `ABC123_1.fastq.gz` | ABC123 |
+| Format   | Example                         | Sample Name |
+|----------|---------------------------------|-------------|
+| Standard | `ABC123_R1.fastq.gz`            | ABC123      |
+| CASAVA   | `ABC123_S1_L001_R1_001.fastq.gz`| ABC123      |
+| Simple   | `ABC123_1.fastq.gz`             | ABC123      |
 
 **Supported extensions**: `.fastq`, `.fq`, `.fastq.gz`, `.fq.gz`
 
@@ -143,14 +143,14 @@ output_dir/
 │   ├── recentrifuge_report.xlsx
 │   └── xf_taxid_2370/            # per-taxid outputs (FASTQ)
 ├── 03.probes_reconstruction/     # Reconstructed gene sequences & stats
-│   ├── sampleA/                  # sample-level reconstructed FASTA and stats
-│   └── sampleB/
+│   ├── sample-A/                  # sample-level reconstructed FASTA and stats
+│   └── sample-B/
 ├── 04.mlst-typing/               # MLST typing results
 │   └── mlst_summary.csv
 ├── 05.phylogenetic_trees/        # Phylogenetic analysis per sample
 │   ├── summary.txt
-│   ├── sampleA/                  # per-sample alignments, trees, plots
-│   └── sampleB/
+│   ├── sample-A/                  # per-sample alignments, trees, plots
+│   └── sample-B/
 └── logs/                         # Log files for each step (rule/sample.log)
 ```
 
