@@ -155,6 +155,20 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="",
         help="Number of parallel IQ-TREE jobs (default: 2)",
     )
+    resources_group.add_argument(
+        "--iqtree-threads",
+        type=int,
+        default=8,
+        metavar="",
+        help="Number of threads per IQ-TREE job (default: 8)",
+    )
+    resources_group.add_argument(
+        "--kraken-threads",
+        type=int,
+        default=8,
+        metavar="",
+        help="Number of threads per Kraken2 job (default: 8)",
+    )
     run_parser.add_argument(
         "--no-auto",
         action="store_true",
@@ -165,7 +179,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--k2-mapping-memory",
         action="store_true",
         default=False,
-        help="Enable Kraken2 memory mapping mode (avoids loading entire database into RAM)",
+        help="Enable Kraken2 memory mapping mode (avoids loading entire database into RAM, default: False)",
     )
 
     run_parser.set_defaults(func=run_run)
@@ -189,6 +203,8 @@ def run_run(args: argparse.Namespace, extra_args: list = None) -> None:
         kraken_jobs=args.kraken_jobs,
         alignment_jobs=args.alignment_jobs,
         iqtree_jobs=args.iqtree_jobs,
+        kraken_threads=args.kraken_threads,
+        iqtree_threads=args.iqtree_threads,
         auto=not args.no_auto,
         k2_mapping_memory=args.k2_mapping_memory,
         extra_args=extra_args if extra_args else None,

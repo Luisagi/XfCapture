@@ -236,7 +236,7 @@ rule kraken2:
         db = config['kraken2']['database'],
         memory_mapping = "--memory-mapping" if config['kraken2'].get('memory_mapping', False) else ""
     resources:
-        threads = 8,
+        threads = config['threads'].get('kraken2', 8),
         kraken_jobs = 1
     conda:
         "envs/taxa-classification.yaml"
@@ -907,7 +907,7 @@ rule phylogenetic_analysis:
         tree_dir = "05.phylogenetic_trees/{sample}/consensus_tree",
         align_dir = "05.phylogenetic_trees/{sample}/alignments"
     resources:
-        threads = 8,
+        threads = config['threads'].get('iqtree', 8),
         iqtree_jobs = 1
     conda:
         "envs/phylogeny.yaml"
