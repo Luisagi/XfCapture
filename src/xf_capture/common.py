@@ -29,21 +29,6 @@ def check_snakemake() -> bool:
     return shutil.which("snakemake") is not None
 
 
-def print_header() -> None:
-    """Print XfCapture header banner."""
-    header = """
-╔═══════════════════════════════════════════════════════════════════════╗
-║                            XfCapture                                  ║
-║   Xylella fastidiosa Targeted Sequence Capture Enrichment Pipeline   ║
-║                                                                       ║
-║   Authors: Luis F. Arias-Giraldo, Maria P. Velasco-Amo,              ║
-║            Blanca B. Landa                                            ║
-║   License: MIT                                                        ║
-╚═══════════════════════════════════════════════════════════════════════╝
-"""
-    print(header)
-
-
 def print_version() -> None:
     """Print XfCapture version information."""
     from importlib.metadata import version, PackageNotFoundError
