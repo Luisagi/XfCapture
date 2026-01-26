@@ -35,6 +35,12 @@ def build_parser() -> argparse.ArgumentParser:
             """
         ),
     )
+    # Add version flag
+    parser.add_argument(
+        "-v", "--version",
+        action="store_true",
+        help="Show xf_capture version and exit"
+    )
 
     subparsers = parser.add_subparsers(
         title="Available commands",
@@ -190,8 +196,22 @@ def run_run(args: argparse.Namespace, extra_args: list = None) -> None:
 
 
 def main() -> None:
+    try:
+        from importlib.metadata import version
+    except ImportError:
+        from importlib_metadata import version
+
     parser = build_parser()
     args, extra_args = parser.parse_known_args()
+
+    # Handle version flag
+    if getattr(args, "version", False):
+        try:
+            pkg_version = version("xf_capture")
+        except Exception:
+            pkg_version = "unknown"
+        print(f"version v.{pkg_version}")
+        sys.exit(0)
 
     if not hasattr(args, "func"):
         parser.print_help()
