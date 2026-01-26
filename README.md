@@ -171,7 +171,8 @@ Loading the Kraken2 database is the most memory-intensive step of the pipeline, 
 ```bash
 usage: xf_capture setup [-h] --dir  [--k2-db ]
 
-Prepare the XfCapture workflow environment. This command initializes the workflow directory, extracts reference sequences, downloads required databases (i.e. Kraken2), and stores user-specific configuration.
+Prepare the XfCapture workflow environment. This command initializes the workflow directory, extracts 
+reference sequences, downloads required databases (i.e. Kraken2), and stores user-specific configuration.
 
 options:
   -h, --help  show this help message and exit
@@ -208,14 +209,15 @@ See [kraken2 AWS indexes](https://benlangmead.github.io/aws-indexes/k2).
 
 ### 2. Run the pipeline
 
-There is a mock dataset available in the clone repository `test_data/` folder for testing purposes.
+Execute the pipeline using the `xf_capture run` command, specifying the input directory containing paired-end FASTQ files and the desired output directory for results.
 
 ```bash
 usage: xf_capture run [-h] -i  -o  [--workflow-dir ] [--kraken-db ] [--cores ][--kraken-jobs ]
                       [--alignment-jobs ] [--iqtree-jobs ] [--iqtree-threads ] [--kraken-threads ]
                       [--no-auto] [--k2-mapping-memory]
 
-Execute the XfCapture pipeline on paired-end sequencing data. This command generates a configuration file and launches Snakemake using the packaged workflow.
+Execute the XfCapture pipeline on paired-end sequencing data. This command generates a configuration
+file and launches Snakemake using the packaged workflow.
 
 options:
   -h, --help           show this help message and exit
@@ -240,6 +242,8 @@ Resource allocation:
   --kraken-threads     Number of threads per Kraken2 job (default: 8)
 ```
 
+
+There is a mock dataset available in the clone repository `test_data/` folder for testing purposes.
 
 ```bash
 xf_capture run -i test_data/ -o output_dir/
