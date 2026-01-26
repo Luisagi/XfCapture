@@ -99,10 +99,10 @@ All samples must be provided as paired-end reads located in the same directory. 
 
 ```bash
 input_fastq_dir/
-├── sampleA_R1.fastq.gz
-├── sampleA_R2.fastq.gz
-├── sampleB_R1.fastq.gz
-└── sampleB_R2.fastq.gz
+├── sample-A_R1.fastq.gz
+├── sample-A_R2.fastq.gz
+├── sample-B_R1.fastq.gz
+└── sample-B_R2.fastq.gz
 ```
 
 ### Supported Naming Formats
@@ -278,9 +278,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Authors and Contributors
 
-- Luis F. Arias-Giraldo [https://orcid.org/0000-0003-4861-8064](ORCID: 0000-0003-4861-8064)
-- Maria P. Velasco-Amo  [https://orcid.org/0000-0001-7176-0435](ORCID: 0000-0001-7176-0435)
-- Blanca B. Landa       [https://orcid.org/0000-0002-9511-3731](ORCID: 0000-0002-9511-3731)
+- Luis F. Arias-Giraldo [ORCID:0000-0003-4861-8064](https://orcid.org/0000-0003-4861-8064)
+- Maria P. Velasco-Amo  [ORCID:0000-0001-7176-0435](https://orcid.org/0000-0001-7176-0435)
+- Blanca B. Landa       [ORCID:0000-0002-9511-3731](https://orcid.org/0000-0002-9511-3731)
 
 ## Acknowledgments
 
