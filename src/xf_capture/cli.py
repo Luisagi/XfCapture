@@ -124,9 +124,9 @@ def build_parser() -> argparse.ArgumentParser:
     resources_group.add_argument(
         "--cores",
         type=int,
-        default=10,
+        default=16,
         metavar="",
-        help="Total number of CPU cores to use (default: 10)",
+        help="Total number of CPU cores to use (default: 16)",
     )
     resources_group.add_argument(
         "--kraken-jobs",
@@ -134,22 +134,21 @@ def build_parser() -> argparse.ArgumentParser:
         default=1,
         metavar="",
         help="Number of parallel Kraken2 jobs (default: 1)",
-    )
+    ) 
     resources_group.add_argument(
         "--alignment-jobs",
         type=int,
-        default=5,
+        default=4,
         metavar="",
-        help="Number of parallel alignment jobs (default: 5)",
+        help="Number of parallel alignment jobs (default: 4)",
     )
     resources_group.add_argument(
         "--iqtree-jobs",
         type=int,
-        default=3,
+        default=2,
         metavar="",
-        help="Number of parallel IQ-TREE jobs (default: 3)",
+        help="Number of parallel IQ-TREE jobs (default: 2)",
     )
-
     run_parser.add_argument(
         "--no-auto",
         action="store_true",

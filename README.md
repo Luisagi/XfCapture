@@ -11,7 +11,7 @@
 
 <hr>
 
-> A scalable Snakemake pipeline for end-to-end analysis of  *Xylella fastidiosa* targeted sequence capture enrichment (*Xf*-TSCE) Illumina sequencing data, from raw FASTQ files to phylogenetic inference.
+> A scalable Snakemake pipeline for end-to-end analysis of  *Xylella fastidiosa* **T**argeted **S**equence **C**apture **E**nrichment (*Xf*-TSCE) Illumina sequencing data, from raw FASTQ files to phylogenetic inference.
 
 
 
@@ -99,10 +99,10 @@ All samples must be provided as paired-end reads located in the same directory. 
 
 ```bash
 input_fastq_dir/
-├── sample1_R1.fastq.gz
-├── sample1_R2.fastq.gz
-├── sample2_R1.fastq.gz
-└── sample2_R2.fastq.gz
+├── sampleA_R1.fastq.gz
+├── sampleA_R2.fastq.gz
+├── sampleB_R1.fastq.gz
+└── sampleB_R2.fastq.gz
 ```
 
 ### Supported Naming Formats
@@ -127,10 +127,10 @@ The XfCapture pipeline is organized into two main phases. First, each sample is 
 
 Each output directory corresponds to a key analysis stage:
 
-- **01.pre-processing/**: Contains an HTML quality-control report of FASTQ files processed by `fastp` and (optionally) trimmed reads in `qc_report_data/`.
-- **02.tax-classification/**: Includes taxonomic classification results from `Kraken2` and `Recentrifuge` (reports and per-taxid outputs).
+- **01.pre-processing/**: Contains an HTML quality-control report of FASTQ files processed by `fastp`.
+- **02.tax-classification/**: Includes taxonomic classification results from `Kraken2` and `Recentrifuge`.
 - **03.probes_reconstruction/**: Stores reconstructed gene/probe sequences per sample (FASTA) and reconstruction statistics (CSV).
-- **04.mlst-typing/**: Presents `MLST` typing results (per-sample reports and a combined `mlst_summary.csv`).
+- **04.mlst-typing/**: Presents `MLST` typing results (`mlst_summary.csv`).
 - **05.phylogenetic_trees/**: Holds alignments (FASTA), phylogenetic trees (Newick), and visualizations produced from successfully reconstructed samples.
 
 ```bash
@@ -149,8 +149,8 @@ output_dir/
 │   └── mlst_summary.csv
 ├── 05.phylogenetic_trees/        # Phylogenetic analysis per sample
 │   ├── summary.txt
-│   ├── sample_1/                 # per-sample alignments, trees, plots
-│   └── sample_n/
+│   ├── sampleA/                  # per-sample alignments, trees, plots
+│   └── sampleB/
 └── logs/                         # Log files for each step (rule/sample.log)
 ```
 
@@ -163,8 +163,8 @@ output_dir/
 Create a working directory where the pipeline will store all required references, probe files, and the Kraken2 database. This directory can be located anywhere on your system.
 
 XfCapture uses two pre-built Kraken2 databases:
-- **8 GB** (default): suitable for machines with limited memory
-- **16 GB** (recommended): requires ≥64 GB RAM and provides improved classification performance
+- **8 GB** (default): suitable for machines with limited memory.
+- **16 GB** (recommended): requires ≥64 GB RAM and provides improved classification performance.
 
 Loading the Kraken2 database is the most memory-intensive step of the pipeline, so choose the database size according to your available RAM.
 
@@ -199,7 +199,7 @@ See [kraken2 AWS indexes](https://benlangmead.github.io/aws-indexes/k2).
 There is a mock dataset available in the clone repository `test_data/` folder for testing purposes.
 
 ```bash
-xf_capture run -i test_data/ -o output_dir/ --cores 8 --use-conda
+xf_capture run -i test_data/ -o output_dir/ --cores 8
 ```
 
 ---
@@ -278,9 +278,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Authors and Contributors
 
-- Luis F. Arias-Giraldo (ORCID: 0000-0003-4861-8064)
-- Maria P. Velasco-Amo  (ORCID: 0000-0001-7176-0435)
-- Blanca B. Landa       (ORCID: 0000-0002-9511-3731)
+- Luis F. Arias-Giraldo (ORCID: 0000-0003-4861-8064)[https://orcid.org/0000-0003-4861-8064]
+- Maria P. Velasco-Amo  (ORCID: 0000-0001-7176-0435)[https://orcid.org/0000-0001-7176-0435]
+- Blanca B. Landa       (ORCID: 0000-0002-9511-3731)[https://orcid.org/0000-0002-9511-3731]
 
 ## Acknowledgments
 
