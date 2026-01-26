@@ -19,7 +19,9 @@ def generate_config(
     output_dir: str,
     workflow_dir: str | None = None,
     kraken_db: str | None = None,
-    k2_mapping_memory: bool = False
+    k2_mapping_memory: bool = False,
+    iqtree_threads: int = 8,
+    kraken_threads: int = 8
 ) -> Path:
     """
     Generate a config file for the Snakemake run.
@@ -33,6 +35,8 @@ def generate_config(
         workflow_dir: Path to workflow directory (created with setup)
         kraken_db: Path to Kraken2 database (overrides workflow_dir setting)
         k2_mapping_memory: Enable Kraken2 memory mapping mode
+        iqtree_threads: Number of threads per IQ-TREE job
+        kraken_threads: Number of threads per Kraken2 job
 
     Returns:
         Path to the generated config file
@@ -50,6 +54,11 @@ def generate_config(
         "kraken2": {
             "database": kraken_db if kraken_db else "/path/to/kraken2/database",
             "memory_mapping": k2_mapping_memory,
+            "threads": kraken_threads,
+        },
+        "threads": {
+            "iqtree": iqtree_threads,
+            "kraken2": kraken_threads,
         }
     }
 
@@ -95,6 +104,8 @@ def run_pipeline(
     kraken_jobs: int = 1,
     alignment_jobs: int = 4,
     iqtree_jobs: int = 2,
+    iqtree_threads: int = 8,
+    kraken_threads: int = 8,
     auto: bool = True,
     k2_mapping_memory: bool = False,
     extra_args: list | None = None,
@@ -115,6 +126,8 @@ def run_pipeline(
         kraken_jobs: Number of parallel Kraken2 jobs
         alignment_jobs: Number of parallel alignment jobs
         iqtree_jobs: Number of parallel IQ-TREE jobs
+        iqtree_threads: Number of threads per IQ-TREE job
+        kraken_threads: Number of threads per Kraken2 job
         auto: Continue to Phase 2 automatically without prompting
         k2_mapping_memory: Enable Kraken2 memory mapping mode
         extra_args: Additional arguments to pass to Snakemake
@@ -154,7 +167,9 @@ def run_pipeline(
         output_dir=output_dir,
         workflow_dir=workflow_dir,
         kraken_db=kraken_db,
-        k2_mapping_memory=k2_mapping_memory
+        k2_mapping_memory=k2_mapping_memory,
+        iqtree_threads=iqtree_threads,
+        kraken_threads=kraken_threads
     )
     print(f"[Run] Config file:      {config_path}")
 
