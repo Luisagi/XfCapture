@@ -169,6 +169,18 @@ XfCapture uses two pre-built Kraken2 databases:
 Loading the Kraken2 database is the most memory-intensive step of the pipeline, so choose the database size according to your available RAM.
 
 ```bash
+usage: xf_capture setup [-h] --dir  [--k2-db ]
+
+Prepare the XfCapture workflow environment. This command initializes the workflow directory, extracts reference sequences, downloads required databases (i.e. Kraken2), and stores user-specific configuration.
+
+options:
+  -h, --help  show this help message and exit
+  --dir       Directory where the workflow environment will be created
+  --k2-db     Kraken2 database size to download: 8GB or 16GB (default: 8GB)
+```
+
+
+```bash
 # Set up directories and config (choose 16Gb or 8Gb for the database)
 xf_capture setup --dir /path/to/xf_capture_db --k2-db "16Gb"
 ```
@@ -199,7 +211,38 @@ See [kraken2 AWS indexes](https://benlangmead.github.io/aws-indexes/k2).
 There is a mock dataset available in the clone repository `test_data/` folder for testing purposes.
 
 ```bash
-xf_capture run -i test_data/ -o output_dir/ --cores 8
+usage: xf_capture run [-h] -i  -o  [--workflow-dir ] [--kraken-db ] [--cores ][--kraken-jobs ]
+                      [--alignment-jobs ] [--iqtree-jobs ] [--iqtree-threads ] [--kraken-threads ]
+                      [--no-auto] [--k2-mapping-memory]
+
+Execute the XfCapture pipeline on paired-end sequencing data. This command generates a configuration file and launches Snakemake using the packaged workflow.
+
+options:
+  -h, --help           show this help message and exit
+  --no-auto            Disable automatic continuation to phylogenetic analysis (requires confirmation)
+  --k2-mapping-memory  Enable Kraken2 memory mapping mode (avoids loading entire database into RAM,
+                       default: False)
+
+Input / Output options:
+  -i, --input-dir      Directory containing paired-end FASTQ files
+  -o, --output-dir     Directory where results will be written
+
+Workflow configuration:
+  --workflow-dir       Path to an existing workflow directory (optional)
+  --kraken-db          Path to a Kraken2 database (optional)
+
+Resource allocation:
+  --cores              Total number of CPU cores to use (default: 16)
+  --kraken-jobs        Number of parallel Kraken2 jobs (default: 1)
+  --alignment-jobs     Number of parallel alignment jobs (default: 4)
+  --iqtree-jobs        Number of parallel IQ-TREE jobs (default: 2)
+  --iqtree-threads     Number of threads per IQ-TREE job (default: 8)
+  --kraken-threads     Number of threads per Kraken2 job (default: 8)
+```
+
+
+```bash
+xf_capture run -i test_data/ -o output_dir/
 ```
 
 ---
