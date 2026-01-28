@@ -49,7 +49,7 @@ The following software must be installed:
 
 ```bash
 # optional, if not installed already
-conda create -c conda-forge -c bioconda -n xfcapture snakemake
+conda create -c conda-forge -c bioconda -n xfcapture snakemake python>=3.11
 
 # activate environment
 conda activate xfcapture
