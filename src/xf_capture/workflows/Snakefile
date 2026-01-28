@@ -535,6 +535,10 @@ rule bcftools_consensus:
 
         # Filter out sequences containing Ns (incomplete reconstruction)
         seqkit grep -s -v -r -p "N" {output.consensus} > {output.consensus_filtered}
+
+        # Extract plasmid sequences (completes) if present
+        seqkit grep -r -p "^plasmid__" {output.consensus_filtered} \
+        > "03.probes_reconstruction/consensus/{sample}_plasmids.fasta"
         """
 
 
@@ -787,8 +791,8 @@ rule prepare_alignment_files:
         """
         mkdir -p {output.gene_outdir}
 
-        # Get list of successfully reconstructed genes
-        grep "^>" {input.consensus_filtered} | sed 's/^>//' > {output.gene_ids}
+        # Get list of successfully reconstructed genes and exclude plasmids
+        grep "^>" {input.consensus_filtered} | grep -v "^>plasmid__" | sed 's/^>//' > {output.gene_ids}
 
         # Process each gene
         for gene_id in $(cat {output.gene_ids}); do
