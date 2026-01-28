@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xf_capture"
-version = "0.0.2"
+version = "0.0.3"
 description = "Pipeline for X. fastidiosa targeted sequence capture enrichment (Xf-TSCE)"
 authors = [
     { name = "Luis F. Arias-Giraldo" }
