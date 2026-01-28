@@ -536,9 +536,11 @@ rule bcftools_consensus:
         # Filter out sequences containing Ns (incomplete reconstruction)
         seqkit grep -s -v -r -p "N" {output.consensus} > {output.consensus_filtered}
 
-        # Extract plasmid sequences (completes) if present
-        seqkit grep -r -p "^plasmid__" {output.consensus_filtered} \
-        > "03.probes_reconstruction/consensus/{sample}_plasmids.fasta"
+        # Extract plasmid sequences only if present
+        if grep -q "^>plasmid__" {output.consensus_filtered}; then
+            seqkit grep -r -p "^plasmid__" {output.consensus_filtered} \
+            >> "03.probes_reconstruction/consensus/{sample}_plasmids.fasta"
+        fi
         """
 
 
