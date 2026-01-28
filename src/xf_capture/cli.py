@@ -101,14 +101,14 @@ def build_parser() -> argparse.ArgumentParser:
     io_group.add_argument(
         "-i",
         "--input-dir",
-        required=True,
+        default=None,
         metavar="",
         help="Directory containing paired-end FASTQ files",
     )
     io_group.add_argument(
         "-o",
         "--output-dir",
-        required=True,
+        default=None,
         metavar="",
         help="Directory where results will be written",
     )
@@ -234,6 +234,17 @@ def main() -> None:
 
     # Pass extra arguments if running the pipeline
     if args.command == "run":
+        missing = []
+        if args.input_dir is None:
+            missing.append("--input-dir")
+        if args.output_dir is None:
+            missing.append("--output-dir")
+
+        if missing:
+            parser.error(
+                f"run requires the following arguments: {', '.join(missing)}"
+            )
+
         run_run(args, extra_args)
     else:
         args.func(args)
