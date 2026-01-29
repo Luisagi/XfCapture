@@ -330,6 +330,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Luis F. Arias-Giraldo [ORCID:0000-0003-4861-8064](https://orcid.org/0000-0003-4861-8064)
 - Maria P. Velasco-Amo  [ORCID:0000-0001-7176-0435](https://orcid.org/0000-0001-7176-0435)
 - Blanca B. Landa       [ORCID:0000-0002-9511-3731](https://orcid.org/0000-0002-9511-3731)
+- [ ... ]
 
 ## Acknowledgments
 

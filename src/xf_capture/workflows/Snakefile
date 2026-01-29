@@ -125,7 +125,7 @@ rule all:
 
         # Probe reconstruction outputs
         bam_stats = expand("03.probes_reconstruction/stats/{sample}_mapped_stats.tsv", sample=SAMPLES),
-        consensus_filtered = expand("03.probes_reconstruction/consensus/{sample}_cns_filtered.fasta", sample=SAMPLES),
+        consensus_filtered = expand("03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta", sample=SAMPLES),
         recon_stats = expand("03.probes_reconstruction/stats/{sample}_recon_stats.tsv", sample=SAMPLES),
         summary_stats = "03.probes_reconstruction/reconstruction_summary.xlsx",
         unmapped_R1 = expand("03.probes_reconstruction/unmapped/{sample}_unmapped_R1.fastq.gz", sample=SAMPLES),
@@ -505,8 +505,8 @@ rule bcftools_consensus:
         vcf = temp("03.probes_reconstruction/consensus/{sample}.vcf.gz"),
         csi = temp("03.probes_reconstruction/consensus/{sample}.vcf.gz.csi"),
         bed = temp("03.probes_reconstruction/consensus/{sample}_lowcov.bed"),
-        consensus = "03.probes_reconstruction/consensus/{sample}_cns.fasta",
-        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_cns_filtered.fasta"
+        consensus = temp("03.probes_reconstruction/consensus/{sample}_cns.fasta"),
+        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta"
     params:
         fasta = config['references']['probes'],
         ploidy = 1,
@@ -529,17 +529,17 @@ rule bcftools_consensus:
             awk -v min_depth={params.min_depth} '$3 < min_depth {{print $1"\t"$2-1"\t"$2}}' \
             > {output.bed} 2>> {log}
 
-        # Generate consensus with Ns for masked regions
-        bcftools consensus -f {params.fasta} -m {output.bed} {output.vcf} \
-            > {output.consensus} 2>> {log}
+        # Generate consensus with Ns for masked regions and filter out sequences containing Ns (incomplete reconstruction)
+        bcftools consensus -f {params.fasta} -m {output.bed} {output.vcf} | \
+        seqkit grep -s -v -r -p "N" > {output.consensus} 2>> {log}
 
-        # Filter out sequences containing Ns (incomplete reconstruction)
-        seqkit grep -s -v -r -p "N" {output.consensus} > {output.consensus_filtered}
+        # Keep only target genes by removing plasmid sequences
+        seqkit grep -rv -p "plasmid__" {output.consensus} > {output.consensus_filtered}
 
         # Extract plasmid sequences only if present
         if grep -q "^>plasmid__" {output.consensus_filtered}; then
             seqkit grep -r -p "^plasmid__" {output.consensus_filtered} \
-            >> "03.probes_reconstruction/consensus/{sample}_plasmids.fasta"
+            > "03.probes_reconstruction/consensus/{wildcards.sample}_plasmid_consensus.fasta"
         fi
         """
 
@@ -633,7 +633,7 @@ rule verify_reconstruction:
     successfully reconstructed sequences for downstream phylogenetic analysis.
     """
     input:
-        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_cns_filtered.fasta"
+        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta"
     output:
         check_file = "03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt"
     log:
@@ -776,7 +776,7 @@ rule prepare_alignment_files:
       - Reconstructed consensus sequence from the sample
     """
     input:
-        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_cns_filtered.fasta",
+        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta",
         ref_dir = "05.phylogenetic_trees/refs/",
         xf_refs = expand("05.phylogenetic_trees/refs/{fasta}/{fasta}.bed.fasta", fasta=XF_GENOMES),
         checkpoint = "03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt"
@@ -794,7 +794,8 @@ rule prepare_alignment_files:
         mkdir -p {output.gene_outdir}
 
         # Get list of successfully reconstructed genes and exclude plasmids
-        grep "^>" {input.consensus_filtered} | grep -v "^>plasmid__" | sed 's/^>//' > {output.gene_ids}
+        # grep "^>" {input.consensus_filtered} | grep -v "^>plasmid__" | sed 's/^>//' > {output.gene_ids}
+        grep "^>" {input.consensus_filtered} | sed 's/^>//' > {output.gene_ids}
 
         # Process each gene
         for gene_id in $(cat {output.gene_ids}); do
