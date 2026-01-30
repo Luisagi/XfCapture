@@ -57,6 +57,20 @@ conda create -c conda-forge -c bioconda -n xfcapture snakemake
 conda activate xfcapture
 ```
 
+**IMPORTANT: Conda channel setup**
+
+This pipeline requires a specific conda channel order and strict channel priority to ensure correct and reproducible dependency resolution.
+
+Configure conda **before installing or running the pipeline**:
+
+```bash
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+```
+
+
 ### Step 2: Installation
 
 If you already have Conda/Mamba and Snakemake installed, you can run the pipeline in three commands:
@@ -68,7 +82,7 @@ cd XfCapture
 pip install -e .
 
 # 2. Prepare references and databases
-xf_capture setup --dir /path/to/xf_capture_db --k2-db "16Gb"
+xf_capture setup --dir /path/to/xf_capture_db --k2-db "16GB"
 
 # 3. Run the pipeline
 xf_capture run -i test_data/ -o results/ --cores 16
@@ -260,7 +274,7 @@ xf_capture run -i test_data/ -o output_dir/
 
 ## Troubleshooting
 
-- Memory errors loading Kraken2 DB: use the 8GB database (`--k2-db "8Gb"`) or run on a machine with >=64 GB RAM. If you have limited RAM, consider running only sample-level steps first.
+- Memory errors loading Kraken2 DB: use the 8GB database (`--k2-db "8GB"`) or run on a machine with >=64 GB RAM. If you have limited RAM, consider running only sample-level steps first.
 - Missing read pairs or unrecognized file names: ensure FASTQ names follow one of the supported patterns and that R1/R2 pairs are present in the input directory.
 - Rule failures: inspect `output_dir/logs/` for per-rule logs.
 
