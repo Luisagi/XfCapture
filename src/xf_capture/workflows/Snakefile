@@ -505,7 +505,8 @@ rule bcftools_consensus:
         vcf = temp("03.probes_reconstruction/consensus/{sample}.vcf.gz"),
         csi = temp("03.probes_reconstruction/consensus/{sample}.vcf.gz.csi"),
         bed = temp("03.probes_reconstruction/consensus/{sample}_lowcov.bed"),
-        consensus = temp("03.probes_reconstruction/consensus/{sample}_cns.fasta"),
+        consensus = "03.probes_reconstruction/consensus/{sample}_cns_raw.fasta",
+        consensus_noN = temp("03.probes_reconstruction/consensus/{sample}_consensus_noN.fasta"),
         consensus_filtered = "03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta"
     params:
         fasta = config['references']['probes'],
@@ -519,27 +520,29 @@ rule bcftools_consensus:
         "--- [CONSENSUS] BCFtools: Generating consensus for {wildcards.sample} ---"
     shell:
         """
-        # Generate VCF from pileup
+        # 1. Generate VCF from pileup
         bcftools mpileup -Ou -f {params.fasta} {input.bam} 2>> {log} | \
         bcftools call -c --ploidy {params.ploidy} -Oz -o {output.vcf} 2>> {log}
         bcftools index {output.vcf}
 
-        # Create BED mask for low-coverage regions
+        # 2. Create BED mask for low-coverage regions
         samtools depth -aa {input.bam} | \
             awk -v min_depth={params.min_depth} '$3 < min_depth {{print $1"\t"$2-1"\t"$2}}' \
             > {output.bed} 2>> {log}
 
-        # Generate consensus with Ns for masked regions and filter out sequences containing Ns (incomplete reconstruction)
-        bcftools consensus -f {params.fasta} -m {output.bed} {output.vcf} | \
-        seqkit grep -s -v -r -p "N" > {output.consensus} 2>> {log}
+        # 3. Generate consensus with Ns for masked regions 
+        bcftools consensus -f {params.fasta} -m {output.bed} {output.vcf} > {output.consensus} 2>> {log}
 
-        # Keep only target genes by removing plasmid sequences
-        seqkit grep -rv -p "plasmid__" {output.consensus} > {output.consensus_filtered}
+        # 4. Remove sequences with Ns (common filtered base)
+        seqkit grep -s -v -r -p "N" {output.consensus} > {output.consensus_noN}
 
-        # Extract plasmid sequences only if present
-        if grep -q "^>plasmid__" {output.consensus_filtered}; then
-            seqkit grep -r -p "^plasmid__" {output.consensus_filtered} \
-            > "03.probes_reconstruction/consensus/{wildcards.sample}_plasmid_consensus.fasta"
+        # 5. Chromosomal genes only (no Ns, no plasmids)
+        seqkit grep -v -r -p "^plasmid__" {output.consensus_noN} > {output.consensus_filtered}
+
+        # 6. Plasmid genes only (no Ns, only if present)
+        if grep -q "^>plasmid__"  {output.consensus_noN}; then
+            seqkit grep -r -p "^plasmid__" {output.consensus_noN} \
+            > 03.probes_reconstruction/consensus/{wildcards.sample}_plasmid_consensus.fasta
         fi
         """
 
@@ -554,7 +557,7 @@ rule reconstruction_stats:
       - Reconstruction percentage
     """
     input:
-        consensus = "03.probes_reconstruction/consensus/{sample}_cns.fasta"
+        consensus = "03.probes_reconstruction/consensus/{sample}_cns_raw.fasta"
     output:
         recon_stats = "03.probes_reconstruction/stats/{sample}_recon_stats.tsv"
     log:
@@ -672,7 +675,7 @@ rule mlst_typing:
     reconstructed consensus sequences from all samples.
     """
     input:
-        consensus = expand("03.probes_reconstruction/consensus/{sample}_cns.fasta", sample=SAMPLES)
+        consensus = expand("03.probes_reconstruction/consensus/{sample}_cns_raw.fasta", sample=SAMPLES)
     output:
         mlst = "04.mlst-typing/mlst_summary.csv"
     resources:
