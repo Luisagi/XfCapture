@@ -47,13 +47,16 @@ The following software must be installed:
 - [Python](https://www.python.org/) ≥ 3.11
 - [Conda](https://docs.conda.io/en/latest/) or [Mamba](https://github.com/mamba-org/mamba)
 
+With Conda or Mamba, you can create an environment with Snakemake as follows:
+
 ```bash
 # optional, if not installed already
-conda create -c conda-forge -c bioconda -n xfcapture snakemake python>=3.11
+conda create -c conda-forge -c bioconda -n xfcapture snakemake
 
 # activate environment
 conda activate xfcapture
 ```
+
 ### Step 2: Installation
 
 If you already have Conda/Mamba and Snakemake installed, you can run the pipeline in three commands:
@@ -95,7 +98,7 @@ For help on a specific command:
 
 ### File Structure
 
-All samples must be provided as paired-end reads located in the same directory. The pipeline automatically infers sample identities from filenames.
+All samples must be provided as paired-end reads located in the same directory. The pipeline automatically infers sample identifiers from filenames.
 
 ```bash
 input_fastq_dir/
@@ -131,7 +134,9 @@ Each output directory corresponds to a key analysis stage:
 - **02.tax-classification/**: Includes taxonomic classification results from `Kraken2` and `Recentrifuge`.
 - **03.probes_reconstruction/**: Stores reconstructed gene/probe sequences per sample (FASTA) and reconstruction statistics (CSV).
 - **04.mlst-typing/**: Presents `MLST` typing results (`mlst_summary.csv`).
-- **05.phylogenetic_trees/**: Holds alignments (FASTA), phylogenetic trees (Newick), and visualizations produced from successfully reconstructed samples.
+- **05.phylogenetic_trees/**: Holds alignments (FASTA), phylogenetic trees (Newick), and visualizations produced from successfully reconstructed samples. 
+
+The phylogenetic analysis step is optional and requires user confirmation before execution and takes longer to complete.
 
 ```bash
 output_dir/
