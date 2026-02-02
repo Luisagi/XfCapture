@@ -7,11 +7,12 @@
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/Luisagi/XfCapture)
 
 
-<img src="misc/logo.jpeg" align="center" width="200"/></a>
+<img src="misc/logo.jpeg" align="right" width="200"/></a>
 
 <hr>
 
 > A scalable Snakemake pipeline for end-to-end analysis of  *Xylella fastidiosa* **T**argeted **S**equence **C**apture **E**nrichment (*Xf*-TSCE) Illumina sequencing data, from raw FASTQ files to phylogenetic inference.
+
 
 
 ## Pipeline summary
