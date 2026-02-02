@@ -7,12 +7,19 @@
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)](https://github.com/Luisagi/XfCapture)
 
 
-<img src="misc/logo.jpeg" align="right" width="200"/></a>
+<img src="misc/logo.jpeg" align="center" width="200"/></a>
 
 <hr>
 
 > A scalable Snakemake pipeline for end-to-end analysis of  *Xylella fastidiosa* **T**argeted **S**equence **C**apture **E**nrichment (*Xf*-TSCE) Illumina sequencing data, from raw FASTQ files to phylogenetic inference.
 
+
+## Pipeline summary
+
+
+<div align="center">
+  <img src="misc/flowchart.png" width="500"/>
+</div>
 
 
 ## Table of Contents
@@ -65,7 +72,7 @@ cd XfCapture
 pip install -e .
 
 # 2. Prepare references and databases
-xf_capture setup --dir /path/to/xf_capture_db --k2-db "16Gb"
+xf_capture setup --dir /path/to/xf_capture_db --k2-db "16GB"
 
 # 3. Run the pipeline
 xf_capture run -i test_data/ -o results/ --cores 16
@@ -255,7 +262,7 @@ xf_capture run -i test_data/ -o output_dir/
 
 ## Troubleshooting
 
-- Memory errors loading Kraken2 DB: use the 8GB database (`--k2-db "8Gb"`) or run on a machine with >=64 GB RAM. If you have limited RAM, consider running only sample-level steps first.
+- Memory errors loading Kraken2 DB: use the 8GB database (`--k2-db "8GB"`) or run on a machine with >=64 GB RAM. If you have limited RAM, consider running only sample-level steps first.
 - Missing read pairs or unrecognized file names: ensure FASTQ names follow one of the supported patterns and that R1/R2 pairs are present in the input directory.
 - Rule failures: inspect `output_dir/logs/` for per-rule logs.
 
