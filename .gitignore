@@ -27,3 +27,5 @@ README_files/*
 
 # Project specific
 *.log
+
+results/
