@@ -27,7 +27,7 @@ def build_parser() -> argparse.ArgumentParser:
             Typical usage:
 
               xf_capture setup --dir xf_workflow
-              xf_capture run -i reads/ -o results/
+              xf_capture run -i fastq_files/ -o results/
 
             For help on a specific command:
 
