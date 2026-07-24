@@ -1,0 +1,119 @@
+Strain	Subspp	Subssp_abr	ST	Region	Country_code	Host	Assembly_level	NCBI_ID
+IVIA5235	fastidiosa	Xff	1	Spain	ESP	Prunus avium	Complete Genome	GCA_003515915.2
+R2XF4358-18	fastidiosa	Xff	1	Spain	ESP	Rhamnus alaternus	Complete Genome	GCA_028228495.1
+IVIA5770	fastidiosa	Xff	1	Spain	ESP	Vitis vinifera	Complete Genome	GCA_028227995.1
+XF-3967-18	fastidiosa	Xff	1	Spain	ESP	Vitis vinifera	Scaffold	GCA_015102005.1
+Riv13	fastidiosa	Xff	1	United States, California	USA	Cercis occidentalis	Complete Genome	GCA_021459945.1
+CFBP8071	fastidiosa	Xff	1	United States, California	USA	Prunus dulcis	Contig	GCA_004016295.1
+M23	fastidiosa	Xff	1	United States, California	USA	Prunus dulcis	Complete Genome	GCA_000019765.1
+Bakersfield-1	fastidiosa	Xff	1	United States, California	USA	Vitis vinifera	Complete Genome	GCA_009664125.2
+CFBP8351	fastidiosa	Xff	1	United States, California	USA	Vitis vinifera	Complete Genome	GCA_028228155.1
+RAAR10-CV17-3	fastidiosa	Xff	1	United States, California	USA	Vitis vinifera	Contig	GCA_022836675.1
+RAAR7-Conn-Creek	fastidiosa	Xff	1	United States, California	USA	Vitis vinifera	Contig	GCA_022836775.1
+Stags-Leap	fastidiosa	Xff	1	United States, California	USA	Vitis vinifera	Complete Genome	GCA_021459925.1
+Temecula1	fastidiosa	Xff	1	United States, California	USA	Vitis vinifera	Complete Genome	GCA_000007245.1
+TemeculaL	fastidiosa	Xff	1	United States, California	USA	Vitis vinifera	Complete Genome	GCA_053901445.1
+EB92-1	fastidiosa	Xff	1	United States, Florida	USA	Sambucus canadensis	Contig	GCA_000219235.2
+GB514	fastidiosa	Xff	1	United States, Texas	USA	Vitis vinifera	Complete Genome	GCA_000148405.1
+GV230	fastidiosa	Xff	2	Taiwan	TWN	Vitis labrusca x cv Black Queen	Complete Genome	GCA_014249995.1
+GV156	fastidiosa	Xff	2	Taiwan	TWN	Vitis vinifera	Contig	GCA_009910885.1
+TPD3	fastidiosa	Xff	2	Taiwan	TWN	Vitis vinifera	Contig	GCA_007845655.1
+TPD4	fastidiosa	Xff	2	Taiwan	TWN	Vitis vinifera	Contig	GCA_007845705.1
+CFBP8082	fastidiosa	Xff	2	United States, Florida	USA	Ambrosia artemisiifolia	Complete Genome	GCA_055765255.1
+ATCC35879	fastidiosa	Xff	2	United States, Florida	USA	Vitis vinifera	Complete Genome	GCA_011801475.1
+CFBP7970	fastidiosa	Xff	2	United States, Florida	USA	Vitis vinifera	Complete Genome	GCA_055766025.1
+DSM10026	fastidiosa	Xff	2	United States, Florida	USA	Vitis vinifera	Scaffold	GCA_900129695.1
+ICMP15197	fastidiosa	Xff	2	United States, Florida	USA	Vitis vinifera	Complete Genome	GCA_028891345.1
+WM1-1	fastidiosa	Xff	2	United States, Georgia	USA	Vitis vinifera	Complete Genome	GCA_028227275.1
+NOB1	fastidiosa	Xff	2	United States, Mississippi	USA	Vitis rotundifolia	Scaffold	GCA_012952075.1
+OK3	fastidiosa	Xff	2	United States, Mississippi	USA	Vitis vinifera	Scaffold	GCA_012952085.1
+VB11	fastidiosa	Xff	2	United States, Mississippi	USA	Vitis vinifera	Scaffold	GCA_012952095.1
+CFBP7969	fastidiosa	Xff	2	United States, North Carolina	USA	Vitis rotundifolia cv Carlos	Complete Genome	GCA_055766035.1
+CFBP8083	fastidiosa	Xff	2	United States, North Carolina	USA	Vitis vinifera	Complete Genome	GCA_028227635.1
+Ann-1	sandyi	Xfs	5	United States, California	USA	Nerium oleander	Complete Genome	GCA_000698805.1
+RAAR8-Xf70	sandyi	Xfs	5	United States, California	USA	Nerium oleander	Contig	GCA_022836755.1
+OC8	sandyi	Xfs	5	United States, California	USA	Olea europaea	Complete Genome	GCA_021474225.1
+CFBP8431	multiplex	Xfm	6	France	FRA	Prunus cerasifera	Contig	GCA_028498215.1
+CFBP8418	multiplex	Xfm	6	France	FRA	Spartium junceum	Complete Genome	GCA_042244175.1
+IVIA6586-2	multiplex	Xfm	6	Spain	ESP	Helicrysum italicum	Contig	GCA_009669335.1
+ESVL	multiplex	Xfm	6	Spain	ESP	Prunus dulcis	Complete Genome	GCA_004023385.2
+IAS-AXF212H7	multiplex	Xfm	6	Spain	ESP	Prunus dulcis	Complete Genome	GCA_055959555.1
+IAS-AXF235T10	multiplex	Xfm	6	Spain	ESP	Prunus dulcis	Complete Genome	GCA_055959565.1
+IVIA5901	multiplex	Xfm	6	Spain	ESP	Prunus dulcis	Complete Genome	GCA_004023395.2
+Dixon	multiplex	Xfm	6	United States, California	USA	Prunus dulcis	Contig	GCA_029626005.1
+AlmaReb2	multiplex	Xfm	6	United States, Georgia	USA	Vaccinium	Complete Genome	GCA_028621935.1
+CFBP13631	multiplex	Xfm	7	France	FRA	Cistus monspeliensis	Contig	GCA_028637265.1
+CFBP8433	multiplex	Xfm	7	France	FRA	Cistus monspeliensis	Complete Genome	GCA_028752655.1
+CFBP13591	multiplex	Xfm	7	France	FRA	Polygala myrtifolia	Contig	GCA_028640155.1
+LM10	multiplex	Xfm	7	United States, California	USA	Olea europaea	Complete Genome	GCA_012974145.1
+RH1	multiplex	Xfm	7	United States, California	USA	Olea europaea	Complete Genome	GCA_012974125.1
+M12	multiplex	Xfm	7	United States, California	USA	Prunus dulcis	Complete Genome	GCA_000019325.1
+RAAR6-Butte	multiplex	Xfm	7	United States, California	USA	Prunus dulcis	Contig	GCA_009695485.1
+Red-Oak-8	multiplex	Xfm	7	United States, California	USA	Quercus rubra	Complete Genome	GCA_021459885.1
+Griffin-1	multiplex	Xfm	7	United States, Georgia	USA	Quercus rubra	Contig	GCA_000466025.1
+CFBP13585	multiplex	Xfm	7	USA	USA	Quercus cerris	Contig	GCA_028637025.1
+sycamore-Sy-VA	multiplex	Xfm	8	United States, Virginia	USA	Platanus occidentalis	Contig	GCA_000732705.1
+ATCC35874	multiplex	Xfm	9	United States, Washington DC	USA	Quercus rubra	Contig	GCA_031834365.1
+Oak-35874	multiplex	Xfm	9	United States, Washington DC	USA	Quercus sp.	Complete Genome	GCA_021459905.1
+CFBP8070	multiplex	Xfm	10	United States, Georgia	USA	Prunus sp.	Complete Genome	GCA_042243345.1
+B111	pauca	Xfp	11	Brasil	BRA	Citrus	Scaffold	GCA_013283685.1
+J1a12	pauca	Xfp	11	Brasil	BRA	Citrus	Complete Genome	GCA_001456235.1
+50066	pauca	Xfp	11	Brasil	BRA	Citrus _ limon	Scaffold	GCA_029691585.1
+11399	pauca	Xfp	11	Brasil	BRA	Citrus sinensis	Contig	GCA_001684415.1
+50080	pauca	Xfp	11	Brasil	BRA	Citrus sinensis	Scaffold	GCA_029691565.1
+CVC0256	pauca	Xfp	11	Brasil	BRA	Citrus sinensis	Contig	GCA_001549745
+Fb7	pauca	Xfp	13	Brasil	BRA	Citrus	Complete Genome	GCA_001456335.3
+9a5c	pauca	Xfp	13	Brasil	BRA	Citrus sinensis	Complete Genome	GCA_000006725.1
+U24D	pauca	Xfp	13	Brasil	BRA	Citrus sinensis	Complete Genome	GCA_001456275.1
+COF0324	pauca	Xfp	14	Brasil	BRA	Coffea sp.	Contig	GCA_001549815.1
+6c	pauca	Xfp	14	Brasil	BRA	Coffee arabica	Contig	GCA_000506905.2
+Pr8x	pauca	Xfp	14	Brasil	BRA	Prunus domestica	Complete Genome	GCA_001456295.2
+32	pauca	Xfp	16	Brasil	BRA	Coffea arabica	Contig	GCA_000506405.1
+3124	pauca	Xfp	16	Brasil	BRA	Coffea sp.	Complete Genome	GCA_001456195.2
+XF64-2	pauca	Xfp	16	Brasil	BRA	Olea europaea	Raw sequence data	SRS8523272
+XF71-BR	pauca	Xfp	16	Brasil	BRA	Olea europaea	Raw sequence data	SRS8523271
+RAAR14-plum327	multiplex	Xfm	26	Brasil	BRA	Prunus domestica	Contig	GCA_009695495.1
+CFBP8075	multiplex	Xfm	27	United States, California	USA	Prunus sp.	Complete Genome	GCA_042242545.1
+Mul-MD	morus	Xfmr	29	United States, Maryland	USA	Morus alba	Contig	GCA_000567985.1
+MUL0034	fastidiosa	Xff	30	United States, California	USA	Morus alba	Complete Genome	GCA_000698825.1
+Riv11	fastidiosa	Xff	31	United States, California	USA	Morus alba	Complete Genome	GCA_021459865.1
+Riv16	fastidiosa	Xff	31	United States, California	USA	Morus alba	Complete Genome	GCA_021398655.1
+Riv5	multiplex	Xfm	34	United States, California	USA	Prunus cerasifera	Complete Genome	GCA_015475955.1
+ICMP8739	multiplex	Xfm	41	United States, California	USA	Prunus dulcis	Contig	GCA_028561485.1
+ATCC35873	multiplex	Xfm	41	United States, Washington DC	USA	Ulmus americana	Contig	GCA_023970635.1
+CFBP8068	multiplex	Xfm	41	United States, Washington DC	USA	Ulmus americana	Complete Genome	GCA_053901255.1
+AlmaEM3	multiplex	Xfm	42	United States, Georgia	USA	Vaccinium	Complete Genome	GCA_018069645.1
+BBI64	multiplex	Xfm	42	United States, Georgia	USA	Vaccinium	Contig	GCA_006369955.1
+BB01	multiplex	Xfm	42	United States, Georgia	USA	Vaccinium corymbosum	Scaffold	GCA_001886315.1
+LA-Y3C	multiplex	Xfm	42	United States, Louisana	USA	Vaccinium virgatum	Complete Genome	GCA_021459845.1
+BB08-1	multiplex	Xfm	43	United States, Florida	USA	Vaccinium	Complete Genome	GCA_018069665.1
+CFBP8078	multiplex	Xfm	51	United States, Florida	USA	Vinca sp. 	Contig	GCA_004016365.1
+OLS0478	pauca	Xfp	53	Costa Rica	CRI	Nerium oleander	Contig	GCA_001549755.1
+OLS0479	pauca	Xfp	53	Costa Rica	CRI	Nerium oleander	Contig	GCA_001549735.1
+PD7202	pauca	Xfp	53	Costa Rica-Inter. NLD	CRI	Coffea arabica	Contig	GCA_006370235.1
+COF0407	pauca	Xfp	53	Italy	ITA	Coffea sp.	Contig	GCA_001549825.1
+CoDiRo	pauca	Xfp	53	Italy	ITA	Olea europaea	Contig	GCA_000811965.1
+De-Donno	pauca	Xfp	53	Italy	ITA	Olea europaea	Complete Genome	GCA_002117875.1
+Salento-1	pauca	Xfp	53	Italy	ITA	Olea europaea	Complete Genome	GCA_002954185.1
+Salento-2	pauca	Xfp	53	Italy	ITA	Olea europaea	Complete Genome	GCA_002954205.1
+Riv19	fastidiosa	Xff	62	United States, California	USA	Morus alba	Complete Genome	GCA_021459805.1
+Riv25	fastidiosa	Xff	62	United States, California	USA	Morus alba	Complete Genome	GCA_021459825.1
+OLI17A	pauca	Xfp	69	Argentina	ARG	Olea europaea	Complete Genome	GCA_029962065.1
+AM2-Angelina	pauca	Xfp	69	Argentina	ARG	Prunus dulcis	Complete Genome	GCA_029962045.1
+Hib4	pauca	Xfp	70	Brasil	BRA	Hibiscus schizopetalus	Complete Genome	GCA_001456315.1
+CFBP8478	sandyi	Xfs	72	Costa Rica-Inter. FRA	CRI	Coffea arabica	Complete Genome	GCA_032594475.1
+CO33	sandyi	Xfs	72	Costa Rica-Inter. ITA	CRI	Coffea arabica	Complete Genome	GCA_032594455.1
+PD7211	pauca	Xfp	73	Costa Rica-Inter. NLD	CRI	Coffea arabica	Contig	GCA_006370175.1
+CFBP8072	pauca	Xfp	74	Ecuador	ECU	Coffea arabica	Scaffold	GCA_001469345.1
+CFBP8073	fastidiosa	Xff	75	Mexico	MEX	Coffea canephora	Complete Genome	GCA_028226975.1
+CFBP8356	sandyi	Xfs	76	Costa Rica-Inter. FRA	CRI	Coffea arabica	Complete Genome	GCA_004016415.2
+ALM4	pauca	Xfp	78	Argentina	ARG	Prunus dulcis	Complete Genome	GCA_029962025.1
+IVIA11529	pauca	Xfp	80	Spain	ESP	Olea europaea	Complete Genome	NA
+XYL468	multiplex	Xfm	81	Spain	ESP	Olea europaea var. sylvestris	Complete Genome	GCA_042237065.1
+XF-3960-18	multiplex	Xfm	81	Spain	ESP	Prunus dulcis	Scaffold	GCA_014856905.1
+Santa29b	multiplex	Xfm	81	Spain	ESP	Santolina chamaecyparissus	Complete Genome	GCA_042240315.1
+Fillmore	multiplex	Xfm	81	United States, California	USA	Olea europaea	Complete Genome	GCA_012974105.1
+Alm-Lz-1	multiplex	Xfm	87	Italy	ITA	Prunus dulcis	Scaffold	GCA_024257125.1
+Ma1	multiplex	Xfm	87	Italy	ITA	Rhamnus alaternus	Contig	GCA_018449155.1
+Ma26	multiplex	Xfm	87	Italy	ITA	Spartium junceum	Contig	GCA_018449175.1
+TOS14	multiplex	Xfm	87	Italy	ITA	Spartium junceum	Contig	GCA_007713995.1
