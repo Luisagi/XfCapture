@@ -970,6 +970,7 @@ rule plot_tree:
         tree_png = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_tree.png"
     params:
         plot_script = str(UTILS_DIR / "plot_tree.R"),
+        metadata = config['references']['metadata'],
         plot_prefix = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}",
         sample_name = "{sample}"
     conda:
@@ -988,6 +989,7 @@ rule plot_tree:
             {input.iqtree_tree} \
             {params.plot_prefix} \
             {params.sample_name} \
+            {params.metadata} \
             >> {log} 2>&1
         """
 

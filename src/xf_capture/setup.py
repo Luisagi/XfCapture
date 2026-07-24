@@ -253,8 +253,9 @@ def setup_workflow(workflow_dir: str, k2_db: str = "8GB") -> None:
     tarball = RESOURCES_DIR / "ref_seqs.tar.gz"
     xf_genomes = ref_seqs / "xf_genomes"
     probes = ref_seqs / "probes.fasta"
+    metadata = ref_seqs / "refs_metadata.tsv"
 
-    if probes.exists() and xf_genomes.exists() and any(xf_genomes.glob("*.fna")):
+    if probes.exists() and xf_genomes.exists() and any(xf_genomes.glob("*.fna")) and metadata.exists():
         print("[Setup] ✓ Reference sequences already extracted. Skipping.")
     else:
         if not tarball.exists():
@@ -302,8 +303,9 @@ def setup_workflow(workflow_dir: str, k2_db: str = "8GB") -> None:
     download_kraken2_database(kraken_db, db_key=k2_db)
 
     # --------------------------------------------------
-    # Configuración del workflow
+    # Configuration del workflow
     # --------------------------------------------------
+
     config = {
         "xf_capture": {
             "workflow_dir": str(workflow_path),
@@ -311,6 +313,7 @@ def setup_workflow(workflow_dir: str, k2_db: str = "8GB") -> None:
             "kraken2_database": str(kraken_db),
             "probes": str(probes),
             "xf_genomes": str(xf_genomes),
+            "metadata": str(metadata),
         }
     }
 

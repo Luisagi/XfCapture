@@ -50,11 +50,11 @@ def generate_config(
         "references": {
             "probes": "/path/to/probes.fasta",
             "xf_genomes": "/path/to/xf_genomes",
+            "metadata": "/path/to/refs_metadata.tsv"
         },
         "kraken2": {
             "database": kraken_db if kraken_db else "/path/to/kraken2/database",
             "memory_mapping": k2_mapping_memory,
-            "threads": kraken_threads,
         },
         "threads": {
             "iqtree": iqtree_threads,
@@ -79,6 +79,8 @@ def generate_config(
                     config["references"]["probes"] = wf_config["xf_capture"]["probes"]
                 if "xf_genomes" in wf_config["xf_capture"]:
                     config["references"]["xf_genomes"] = wf_config["xf_capture"]["xf_genomes"]
+                if "metadata" in wf_config["xf_capture"]:
+                    config["references"]["metadata"] = wf_config["xf_capture"]["metadata"]
 
     # Override with explicit kraken_db if provided
     if kraken_db:
