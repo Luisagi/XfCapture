@@ -204,13 +204,12 @@ sample_node <- which(tree_mid$tip.label == sample_name)
 p <- p +
   geom_hilight(node = sample_node, fill = "red", alpha = .15, extend = 0.01)
 
-p
 # ------------------------------
 # 9. Save as PDF
 # ------------------------------
 out_file <- paste0(tree_name, "_tree.pdf")
 
-pdf(out_file, width = 12, height = 14)
+pdf(out_file, width = 12, height = 14.5)
 print(p)
 dev.off()
 
