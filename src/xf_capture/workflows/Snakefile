@@ -878,7 +878,7 @@ rule align_and_trim_genes:
             fi
 
             # Run MAFFT alignment
-            mafft --auto --thread {resources.threads} "$gene_file" > "$aligned_file" 2>> {log}
+            mafft --retree 1 --thread {resources.threads} "$gene_file" > "$aligned_file" 2>> {log}
 
             # Trim alignment with ClipKit
             clipkit "$aligned_file" -o "$trimmed_file" >> {log} 2>&1
@@ -962,12 +962,12 @@ rule plot_tree:
     """
     Generate phylogenetic tree visualization.
 
-    Creates a PNG image of the phylogenetic tree using R/ggtree.
+    Creates a PDF image of the phylogenetic tree using R/ggtree.
     """
     input:
         iqtree_tree = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}.contree"
     output:
-        tree_png = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_tree.png"
+        tree = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_tree.pdf"
     params:
         plot_script = str(UTILS_DIR / "plot_tree.R"),
         metadata = config['references']['metadata'],
@@ -1017,7 +1017,7 @@ rule phylogeny_phase:
                                                      sample=get_successful_samples()),
         iqtree_tree = lambda wildcards: expand("05.phylogenetic_trees/{sample}/consensus_tree/{sample}.contree",
                                                sample=get_successful_samples()),
-        tree_plots = lambda wildcards: expand("05.phylogenetic_trees/{sample}/consensus_tree/{sample}_tree.png",
+        tree_plots = lambda wildcards: expand("05.phylogenetic_trees/{sample}/consensus_tree/{sample}_tree.pdf",
                                               sample=get_successful_samples())
     output:
         completion = "05.phylogenetic_trees/phylogeny_analysis_complete.txt"
