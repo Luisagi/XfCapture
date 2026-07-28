@@ -6,6 +6,7 @@ from textwrap import dedent
 
 from xf_capture.setup import setup_workflow
 from xf_capture.runner import run_pipeline
+from xf_capture.multiphylo import run_multiphylo
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,6 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
 
               xf_capture setup --dir xf_workflow
               xf_capture run -i fastq_files/ -o results/
+              xf_capture multi-phylo -o results/ --samples-list samples.txt
 
             For help on a specific command:
 
@@ -183,6 +185,72 @@ def build_parser() -> argparse.ArgumentParser:
 
     run_parser.set_defaults(func=run_run)
 
+    # ------------------------------------------------------------------
+    # multi-phylo command
+    # ------------------------------------------------------------------
+    multi_phylo_parser = subparsers.add_parser(
+        "multi-phylo",
+        help="Build a joint phylogenetic tree from a selected subset of samples",
+        description=dedent(
+            """
+            Build a single joint phylogenetic tree from a user-selected subset
+            of samples that already completed Phase 1 in a prior `xf_capture run`.
+
+            The tree is restricted to the genes reconstructed in ALL of the
+            selected samples (intersection by gene identifier), aligned together
+            with the reference genomes.
+            """
+        ),
+    )
+
+    multi_phylo_parser.add_argument(
+        "-o",
+        "--output-dir",
+        required=True,
+        metavar="",
+        help="Output directory from a previous 'xf_capture run' (must contain run_config.yaml)",
+    )
+    multi_phylo_parser.add_argument(
+        "--samples-list",
+        required=True,
+        metavar="",
+        help="Text file with one sample name per line to include in the joint tree",
+    )
+    multi_phylo_parser.add_argument(
+        "--workflow-dir",
+        metavar="",
+        help="Path to an existing workflow directory (optional)",
+    )
+    multi_phylo_parser.add_argument(
+        "--cores",
+        type=int,
+        default=16,
+        metavar="",
+        help="Total number of CPU cores to use (default: 16)",
+    )
+    multi_phylo_parser.add_argument(
+        "--iqtree-threads",
+        type=int,
+        default=8,
+        metavar="",
+        help="Number of threads for the joint IQ-TREE job (default: 8)",
+    )
+    multi_phylo_parser.add_argument(
+        "--alignment-jobs",
+        type=int,
+        default=4,
+        metavar="",
+        help="Number of parallel alignment jobs (default: 4)",
+    )
+    multi_phylo_parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Force rerunning the multi-phylo subgraph even if outputs already exist",
+    )
+
+    multi_phylo_parser.set_defaults(func=run_multi_phylo)
+
     return parser
 
 
@@ -206,6 +274,20 @@ def run_run(args: argparse.Namespace, extra_args: list = None) -> None:
         iqtree_threads=args.iqtree_threads,
         auto=not args.no_auto,
         k2_mapping_memory=args.k2_mapping_memory,
+        extra_args=extra_args if extra_args else None,
+    )
+
+
+def run_multi_phylo(args: argparse.Namespace, extra_args: list = None) -> None:
+    """Dispatch multi-phylo command."""
+    run_multiphylo(
+        output_dir=args.output_dir,
+        samples_list=args.samples_list,
+        workflow_dir=args.workflow_dir,
+        cores=args.cores,
+        iqtree_threads=args.iqtree_threads,
+        alignment_jobs=args.alignment_jobs,
+        force=args.force,
         extra_args=extra_args if extra_args else None,
     )
 
@@ -246,5 +328,7 @@ def main() -> None:
             )
 
         run_run(args, extra_args)
+    elif args.command == "multi-phylo":
+        run_multi_phylo(args, extra_args)
     else:
         args.func(args)

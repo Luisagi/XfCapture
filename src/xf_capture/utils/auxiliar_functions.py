@@ -236,6 +236,125 @@ def get_phylo_outputs(wildcards):
         return []
     return [f"05.phylogenetic_trees/{wildcards.sample}/trees/{gene}.treefile" for gene in genes]
 
+def read_samples_list(path):
+    """
+    Read a text file with one sample name per line for multi-phylo analysis.
+
+    Blank lines and lines starting with '#' are ignored.
+
+    Args:
+        path (str): Path to the samples list text file
+
+    Returns:
+        list: List of sample names, in the order given in the file
+    """
+    if not os.path.exists(path):
+        print(f"ERROR: samples list file not found: {path}")
+        sys.exit(1)
+
+    samples = []
+    with open(path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            samples.append(line)
+
+    if not samples:
+        print(f"ERROR: samples list file is empty: {path}")
+        sys.exit(1)
+
+    return samples
+
+
+def validate_multiphylo_samples(
+    samples,
+    consensus_dir="03.probes_reconstruction/consensus",
+    checkpoint_dir="03.probes_reconstruction/checkpoint"
+):
+    """
+    Validate that every sample requested for multi-phylo analysis already
+    completed Phase 1 successfully in this output_dir.
+
+    Exits with an error listing ALL problems found (missing checkpoint,
+    failed reconstruction, missing consensus file) if any sample is invalid.
+
+    Args:
+        samples (list): Sample names from --samples-list
+        consensus_dir (str): Directory with per-sample consensus FASTA files
+        checkpoint_dir (str): Directory with per-sample reconstruction checkpoints
+
+    Returns:
+        list: The validated list of samples (unchanged)
+    """
+    problems = []
+
+    for sample in samples:
+        checkpoint_file = os.path.join(checkpoint_dir, f"{sample}_reconstruction_check.txt")
+        consensus_file = os.path.join(consensus_dir, f"{sample}_target_gene_consensus.fasta")
+
+        if not os.path.exists(checkpoint_file):
+            problems.append(f"{sample}: no reconstruction checkpoint found (has Phase 1 run for this sample?)")
+            continue
+
+        with open(checkpoint_file, 'r') as f:
+            content = f.read()
+
+        if "SUCCESS:" not in content:
+            problems.append(f"{sample}: reconstruction checkpoint reports FAILED")
+            continue
+
+        if not os.path.exists(consensus_file):
+            problems.append(f"{sample}: missing consensus file {consensus_file}")
+
+    if problems:
+        print("ERROR: multi-phylo requires all listed samples to have a successful Phase 1 reconstruction:")
+        for problem in problems:
+            print(f"  - {problem}")
+        print("Fix --samples-list and re-run.")
+        sys.exit(1)
+
+    return samples
+
+
+def get_common_genes(samples, consensus_dir="03.probes_reconstruction/consensus"):
+    """
+    Compute the strict intersection of reconstructed genes across samples,
+    matching by FASTA header identifier (>gene_id) in each sample's
+    target_gene_consensus.fasta.
+
+    Args:
+        samples (list): Sample names to intersect
+        consensus_dir (str): Directory with per-sample consensus FASTA files
+
+    Returns:
+        list: Sorted list of gene identifiers present in every sample
+    """
+    gene_sets = []
+
+    for sample in samples:
+        consensus_file = os.path.join(consensus_dir, f"{sample}_target_gene_consensus.fasta")
+        genes = set()
+        with open(consensus_file, 'r') as f:
+            for line in f:
+                if line.startswith(">"):
+                    genes.add(line[1:].strip())
+        gene_sets.append(genes)
+
+    common_genes = set.intersection(*gene_sets) if gene_sets else set()
+
+    if not common_genes:
+        print("ERROR: no common reconstructed genes found across the selected samples:")
+        for sample, genes in zip(samples, gene_sets):
+            print(f"  - {sample}: {len(genes)} genes")
+        print("multi-phylo requires at least one gene shared by all selected samples.")
+        sys.exit(1)
+
+    print(f"Multi-phylo: {len(common_genes)} genes common to all {len(samples)} selected samples")
+
+    return sorted(common_genes)
+
+
 def get_successful_samples():
     """
     Get list of samples that successfully reconstructed sequences

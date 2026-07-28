@@ -19,14 +19,15 @@ suppressMessages({
 # ------------------------------
 args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) < 4) {
-  stop("Usage: Rscript plot_tree.R <tree_file> <tree_name> <sample_name> <meta_data>")
+if (length(args) < 5) {
+  stop("Usage: Rscript plot_tree.R <tree_file> <tree_name> <sample_name> <meta_data> <n_genes>")
 }
 
 tree_file   <- args[1]   # Input tree file path
 tree_name   <- args[2]   # Output file identifier
-sample_name <- args[3]   # Sample to highlight in the tree
+sample_name <- args[3]   # Sample(s) to highlight in the tree ("|"-joined regex for multiple)
 meta_data   <- args[4]   # Reference metadata CSV path
+n_genes     <- args[5]   # Number of genes in the concatenated alignment
 
 # ------------------------------
 # 2. Load tree and metadata
@@ -189,20 +190,33 @@ p <- p +
     name = "Subspecies"
   ) +
   theme_tree2() +
-  theme(legend.position = "inside",
-        legend.position.inside = c(0.05, 1),
+  # theme(legend.position = "inside",
+  #       legend.position.inside = c(0.05, 1),
+  #       legend.justification = c(0, 1),
+  #       legend.title = element_text(size = 15),
+  #       legend.text = element_text(face = "italic", size = 14)) +
+  theme(legend.position = "right",
         legend.justification = c(0, 1),
         legend.title = element_text(size = 15),
         legend.text = element_text(face = "italic", size = 14)) +
-  
   hexpand(.10, direction = 1) +
-  vexpand(.015, direction = -1)
+  vexpand(.015, direction = -1) +
 
-# higlight sample node
-sample_node <- which(tree_mid$tip.label == sample_name)
+  labs(
+    title = "Maximum-likelihood phylogenetic tree inferred using the best-fit partitioned model (MFP+MERGE)",
+    subtitle = paste0(n_genes, " genes used")
+  ) +
+  theme(
+    plot.title = element_text(size = 11, face = "bold"),
+    plot.subtitle = element_text(size = 10)
+  )
 
-p <- p +
-  geom_hilight(node = sample_node, fill = "red", alpha = .15, extend = 0.01)
+# highlight every tip matching sample_name (may be several, joined by "|")
+sample_nodes <- grep(sample_name, tree_mid$tip.label)
+
+for (node in sample_nodes) {
+  p <- p + geom_hilight(node = node, fill = "red", alpha = .15, extend = 0.01)
+}
 
 # ------------------------------
 # 9. Save as PDF

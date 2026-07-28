@@ -42,7 +42,10 @@ from xf_capture.utils.auxiliar_functions import (
     get_alignment_outputs,
     get_phylo_outputs,
     print_fasta_headers,
-    get_successful_samples
+    get_successful_samples,
+    read_samples_list,
+    validate_multiphylo_samples,
+    get_common_genes
 )
 
 
@@ -87,6 +90,24 @@ for sample, (r1, r2) in SAMPLES_DICT.items():
 # Get reference genomes for phylogenetic analysis
 XF_DICT = get_fasta_files(XF_REFS)
 XF_GENOMES = XF_DICT.keys()
+
+
+
+# -------------------------------------------------------------------------------
+# Multi-Phylo Sample Discovery (only active when 'multiphylo' section is present
+# in the config, i.e. when invoked via `xf_capture multi-phylo`)
+# -------------------------------------------------------------------------------
+
+# Default to empty so rule definitions referencing these below stay valid
+# (as plain Python identifiers) even when running Phase 1/2 without a
+# 'multiphylo' config section.
+MULTI_SAMPLES = []
+COMMON_GENES = []
+
+if 'multiphylo' in config:
+    MULTI_SAMPLES = read_samples_list(config['multiphylo']['samples_list'])
+    validate_multiphylo_samples(MULTI_SAMPLES)
+    COMMON_GENES = get_common_genes(MULTI_SAMPLES)
 
 
 
@@ -707,7 +728,7 @@ rule extract_genes_from_references:
         xf_genomes = [XF_DICT[fasta][0] for fasta in XF_GENOMES]
     output:
         refs = expand("05.phylogenetic_trees/refs/{fasta}/{fasta}.bed.fasta", fasta=XF_GENOMES),
-        ref_dir = temp(directory("05.phylogenetic_trees/refs/"))
+        ref_dir = directory("05.phylogenetic_trees/refs/")
     params:
         query = config['references']['probes'],
         basenames = list(XF_GENOMES)
@@ -965,7 +986,8 @@ rule plot_tree:
     Creates a PDF image of the phylogenetic tree using R/ggtree.
     """
     input:
-        iqtree_tree = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}.contree"
+        iqtree_tree = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}.contree",
+        partition_file = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_partitions.txt"
     output:
         tree = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_tree.pdf"
     params:
@@ -984,12 +1006,16 @@ rule plot_tree:
         unset R_HOME
         export R_LIBS_USER=""
         export R_LIBS_SITE=""
+
+        n_genes=$(grep -c "charset" {input.partition_file} 2>/dev/null || echo 0)
+
         Rscript \
             {params.plot_script} \
             {input.iqtree_tree} \
             {params.plot_prefix} \
             {params.sample_name} \
             {params.metadata} \
+            "$n_genes" \
             >> {log} 2>&1
         """
 
@@ -1073,4 +1099,281 @@ rule phylogeny_phase:
         else
             echo "SUCCESS: Phylogenetic analysis completed for $successful_count samples" >> {log}
         fi
+        """
+
+
+# ==============================================================================
+# PHASE 3: Multi-Sample Joint Phylogenetic Analysis (xf_capture multi-phylo)
+# ==============================================================================
+#
+# Builds a single joint tree from a user-selected subset of samples
+# (MULTI_SAMPLES, from --samples-list) restricted to the genes reconstructed
+# in ALL of them (COMMON_GENES). Mirrors the per-sample Phase 2 rules, but
+# without a {sample} wildcard since it operates on the fixed selected set.
+# ==============================================================================
+
+rule prepare_multi_alignment_files:
+    """
+    Prepare per-gene FASTA files for the joint multi-sample alignment.
+
+    For each gene present in every selected sample (COMMON_GENES), combines:
+      - Sequences from all reference genomes
+      - Reconstructed consensus sequence from every selected sample
+    """
+    input:
+        consensus_filtered = expand("03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta", sample=MULTI_SAMPLES),
+        ref_dir = "05.phylogenetic_trees/refs/",
+        xf_refs = expand("05.phylogenetic_trees/refs/{fasta}/{fasta}.bed.fasta", fasta=XF_GENOMES),
+        checkpoints = expand("03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt", sample=MULTI_SAMPLES)
+    output:
+        gene_ids = "06.multi_phylogeny/genes_ids.txt",
+        gene_outdir = temp(directory("06.multi_phylogeny/genes"))
+    params:
+        samples = list(MULTI_SAMPLES),
+        genes = list(COMMON_GENES),
+        consensus_dir = "03.probes_reconstruction/consensus"
+    conda:
+        "envs/mapping.yaml"
+    log:
+        "logs/prepare_multi_alignment_files.log"
+    message:
+        "--- [MULTI-PHYLO] Preparing joint alignment files ---"
+    shell:
+        """
+        mkdir -p {output.gene_outdir}
+
+        printf '%s\\n' {params.genes} > {output.gene_ids}
+
+        samples=({params.samples})
+
+        for gene_id in $(cat {output.gene_ids}); do
+            echo "Processing gene: ${{gene_id}}" >> {log}
+
+            # Extract reference sequences for this gene
+            seqkit grep -n -r -p "^${{gene_id}}__" 05.phylogenetic_trees/refs/*/*.fasta \
+                > {output.gene_outdir}/refs_${{gene_id}}.fasta
+
+            # Standardize reference headers
+            perl -i.bak -pe 's/^>.*__/>/g' {output.gene_outdir}/refs_${{gene_id}}.fasta && rm {output.gene_outdir}/refs_${{gene_id}}.fasta.bak
+
+            cp {output.gene_outdir}/refs_${{gene_id}}.fasta {output.gene_outdir}/${{gene_id}}.fasta
+            rm -f {output.gene_outdir}/refs_${{gene_id}}.fasta
+
+            # Append the consensus sequence of every selected sample for this gene
+            for sample in "${{samples[@]}}"; do
+                seqkit grep -n -r -p "^${{gene_id}}$" {params.consensus_dir}/${{sample}}_target_gene_consensus.fasta \
+                    > {output.gene_outdir}/cns_${{sample}}_${{gene_id}}.fasta
+
+                perl -i.bak -pe "s/^>.*/>${{sample}}/g" {output.gene_outdir}/cns_${{sample}}_${{gene_id}}.fasta && rm {output.gene_outdir}/cns_${{sample}}_${{gene_id}}.fasta.bak
+
+                cat {output.gene_outdir}/cns_${{sample}}_${{gene_id}}.fasta >> {output.gene_outdir}/${{gene_id}}.fasta
+                rm -f {output.gene_outdir}/cns_${{sample}}_${{gene_id}}.fasta
+            done
+        done
+        """
+
+
+rule align_and_trim_multi_genes:
+    """
+    Align and trim gene sequences for the joint multi-sample tree.
+
+    Same MAFFT + ClipKit pattern as align_and_trim_genes, but running once
+    over the fixed set of selected samples instead of per-sample.
+    """
+    input:
+        gene_ids  = "06.multi_phylogeny/genes_ids.txt",
+        genes_dir = "06.multi_phylogeny/genes"
+    output:
+        summary   = "06.multi_phylogeny/alignment_summary.txt",
+        align_dir = directory("06.multi_phylogeny/alignments")
+    resources:
+        threads = 4,
+        alignment_jobs = 1
+    conda:
+        "envs/phylogeny.yaml"
+    log:
+        "logs/align_multi_genes.log"
+    message:
+        "--- [MULTI-PHYLO] Aligning genes for the joint tree ---"
+    shell:
+        """
+        mkdir -p {output.align_dir}
+
+        echo "Alignment and trimming summary for multi-phylo analysis" > {output.summary}
+        echo "Analysis started: $(date)" >> {output.summary}
+        echo "" >> {output.summary}
+
+        for gene_id in $(cat {input.gene_ids}); do
+            [ -z "$gene_id" ] && continue
+
+            echo "Processing gene: $gene_id" >> {log}
+            echo "Processing gene: $gene_id" >> {output.summary}
+
+            gene_file="{input.genes_dir}/${{gene_id}}.fasta"
+            aligned_file="{output.align_dir}/${{gene_id}}_aligned.fasta"
+            trimmed_file="{output.align_dir}/${{gene_id}}_alignment_clipkitted.fasta"
+
+            if [ ! -f "$gene_file" ]; then
+                echo "  ERROR: Gene file not found" >> {log}
+                echo "  - Status: FAILED (file not found)" >> {output.summary}
+                continue
+            fi
+
+            mafft --retree 1 --thread {resources.threads} "$gene_file" > "$aligned_file" 2>> {log}
+            clipkit "$aligned_file" -o "$trimmed_file" >> {log} 2>&1
+            rm -f "$aligned_file"
+
+            if [ -s "$trimmed_file" ]; then
+                echo "  - Status: SUCCESS" >> {output.summary}
+            else
+                echo "  - Status: FAILED" >> {output.summary}
+            fi
+        done
+
+        echo "" >> {output.summary}
+        echo "Analysis completed: $(date)" >> {output.summary}
+        """
+
+
+rule multi_phylogenetic_analysis:
+    """
+    Construct the joint multi-sample phylogenetic tree using IQ-TREE.
+
+    Concatenates aligned genes and performs partitioned phylogenetic analysis
+    with ModelFinder for optimal model selection and bootstrap support.
+    """
+    input:
+        gene_ids = "06.multi_phylogeny/genes_ids.txt",
+        alignment_summary = "06.multi_phylogeny/alignment_summary.txt"
+    output:
+        concat_alignment = "06.multi_phylogeny/tree/multiphylo_concatenated_alignment.phy",
+        partition_file = "06.multi_phylogeny/tree/multiphylo_partitions.txt",
+        iqtree_log = "06.multi_phylogeny/tree/multiphylo.log",
+        iqtree_tree = "06.multi_phylogeny/tree/multiphylo.contree"
+    params:
+        model = "MFP+MERGE",
+        tree_dir = "06.multi_phylogeny/tree",
+        align_dir = "06.multi_phylogeny/alignments"
+    resources:
+        threads = config['threads'].get('iqtree', 8),
+        iqtree_jobs = 1
+    conda:
+        "envs/phylogeny.yaml"
+    log:
+        "logs/multi_phylogeny.log"
+    message:
+        "--- [MULTI-PHYLO] Building joint phylogenetic tree ---"
+    shell:
+        """
+        mkdir -p {params.tree_dir}
+
+        # Concatenate alignments using AMAS
+        AMAS.py concat \
+            --in-files {params.align_dir}/*_alignment_clipkitted.fasta \
+            --in-format fasta \
+            --data-type dna \
+            --concat-out {output.concat_alignment} \
+            --out-format phylip \
+            --concat-part {output.partition_file} \
+            --part-format nexus \
+            >> {log} 2>&1
+
+        # Run IQ-TREE with partitioned analysis
+        iqtree \
+            -s {output.concat_alignment} \
+            -p {output.partition_file} \
+            -T {resources.threads} \
+            -pre {params.tree_dir}/multiphylo \
+            -m {params.model} \
+            -B 1000 \
+            --quiet \
+            >> {log} 2>&1
+
+        # Clean up auxiliary files
+        find {params.tree_dir} -type f ! \
+            \\( -name "*.contree" -o -name "*.log" -o -name "*_concatenated_alignment.phy" -o -name "*_partitions.txt" \\) \
+            -delete 2>/dev/null || true
+        """
+
+
+rule plot_multi_tree:
+    """
+    Generate the joint multi-sample phylogenetic tree visualization.
+
+    Highlights every selected sample (as opposed to a single one in Phase 2)
+    against the reference genomes, colored by subspecies.
+    """
+    input:
+        iqtree_tree = "06.multi_phylogeny/tree/multiphylo.contree",
+        partition_file = "06.multi_phylogeny/tree/multiphylo_partitions.txt"
+    output:
+        tree = "06.multi_phylogeny/tree/multiphylo_tree.pdf"
+    params:
+        plot_script = str(UTILS_DIR / "plot_tree.R"),
+        metadata = config['references']['metadata'],
+        plot_prefix = "06.multi_phylogeny/tree/multiphylo",
+        sample_names = "|".join(MULTI_SAMPLES)
+    conda:
+        "envs/r_tools.yaml"
+    log:
+        "logs/plot_multi_tree.log"
+    message:
+        "--- [MULTI-PHYLO] Plotting joint phylogenetic tree ---"
+    shell:
+        """
+        unset R_HOME
+        export R_LIBS_USER=""
+        export R_LIBS_SITE=""
+
+        n_genes=$(grep -c "charset" {input.partition_file} 2>/dev/null || echo 0)
+
+        Rscript \
+            {params.plot_script} \
+            {input.iqtree_tree} \
+            {params.plot_prefix} \
+            "{params.sample_names}" \
+            {params.metadata} \
+            "$n_genes" \
+            >> {log} 2>&1
+        """
+
+
+rule multi_phylogeny_phase:
+    """
+    Phase 3 target rule: joint multi-sample phylogenetic analysis.
+
+    Orchestrates the joint tree reconstruction for the user-selected
+    sample subset (--samples-list), restricted to their common genes.
+    """
+    input:
+        gene_ids = "06.multi_phylogeny/genes_ids.txt",
+        alignment_summary = "06.multi_phylogeny/alignment_summary.txt",
+        iqtree_tree = "06.multi_phylogeny/tree/multiphylo.contree",
+        tree_plot = "06.multi_phylogeny/tree/multiphylo_tree.pdf"
+    output:
+        completion = "06.multi_phylogeny/multi_phylogeny_complete.txt"
+    params:
+        samples = list(MULTI_SAMPLES),
+        n_samples = len(MULTI_SAMPLES),
+        n_genes = len(COMMON_GENES)
+    log:
+        "logs/multi_phylogeny_phase.log"
+    message:
+        "--- [MULTI-PHYLO] Phase 3: Joint phylogenetic analysis complete ---"
+    shell:
+        """
+        echo "Multi-Sample Phylogenetic Analysis Summary" > {output.completion}
+        echo "============================================" >> {output.completion}
+        echo "Analysis completed: $(date)" >> {output.completion}
+        echo "" >> {output.completion}
+        echo "Samples included ({params.n_samples}):" >> {output.completion}
+        for sample in {params.samples}; do
+            echo "  - $sample" >> {output.completion}
+        done
+        echo "" >> {output.completion}
+        echo "Common genes used: {params.n_genes}" >> {output.completion}
+        echo "Tree file: {input.iqtree_tree}" >> {output.completion}
+        echo "Tree plot: {input.tree_plot}" >> {output.completion}
+
+        echo "SUCCESS: Joint phylogenetic analysis completed for {params.n_samples} samples using {params.n_genes} common genes" >> {log}
         """
