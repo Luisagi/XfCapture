@@ -210,7 +210,7 @@ rule fastp:
     conda:
         "envs/qc.yaml"
     log:
-        "logs/fastp_{sample}.log"
+        "logs/01.pre-processing/fastp/{sample}.log"
     message:
         "--- [QC] Fastp: Filtering and trimming reads for {wildcards.sample} ---"
     shell:
@@ -288,7 +288,7 @@ rule kraken2:
     conda:
         "envs/taxa-classification.yaml"
     log:
-        "logs/kraken2_{sample}.log"
+        "logs/02.tax-classification/kraken2_{sample}.log"
     message:
         "--- [TAXONOMY] Kraken2: Classifying reads for {wildcards.sample} ---"
     shell:
@@ -319,7 +319,7 @@ rule download_taxdump:
     conda:
         "envs/taxa-classification.yaml"
     log:
-        "logs/download_taxdump.log"
+        "logs/02.tax-classification/download_taxdump.log"
     message:
         "--- [TAXONOMY] Downloading NCBI taxonomy database ---"
     shell:
@@ -357,7 +357,7 @@ rule recentrifuge:
     conda:
         "envs/taxa-classification.yaml"
     log:
-        "logs/recentrifuge.log"
+        "logs/02.tax-classification/recentrifuge.log"
     message:
         "--- [TAXONOMY] Recentrifuge: Generating taxonomic report ---"
     shell:
@@ -419,9 +419,6 @@ rule extract_xf_reads:
         rm -f {params.tmp_r1} {params.tmp_r2}
         """
 
-
-
-
 # Generate a summary report of preprocessing steps for each sample.
 rule filtering_stats:
     input:
@@ -432,12 +429,12 @@ rule filtering_stats:
         k2_Xf_r1 = "02.tax-classification/xf_taxid_2370/{sample}_R1.fastq.gz",
         k2_Xf_r2 = "02.tax-classification/xf_taxid_2370/{sample}_R2.fastq.gz",
     output:
-        summary = "01.pre-processing/{sample}_summary.tsv"
+        summary = temp("01.pre-processing/{sample}_summary.tsv")
     threads: 4
-    log:
-        "logs/preprocessing_stats/{sample}.log"
     conda:
         "envs/mapping.yaml"
+    log:
+        "logs/01.pre-processing/filtering_stats_{sample}.log"
     message:
         "--- Filtering Stats: Generate summary report for {wildcards.sample}. ---"
     shell:
@@ -455,10 +452,6 @@ rule filtering_stats:
         PCT_XF=$(awk -v xf="$XF" -v raw="$RAW" 'BEGIN {{printf "%.2f", (xf/raw)*100}}')
 
         # Write summary TSV
-        # NOTE: PCT_XF and XF_AVG_LEN are already formatted as decimal strings
-        # (e.g. "42.31") -- they must use %s, not %d: bash's printf builtin
-        # raises "invalid number" (non-zero exit) on a %d given a non-integer,
-        # which aborts this rule under Snakemake's `set -euo pipefail` shell.
         {{
             echo -e "sample_id\ttotal_reads\tafter_trimming\tXf_classified\tretained_pct\tavg_read_length"
             printf "%s\t%d\t%d\t%d\t%s\t%s\n" \
@@ -476,8 +469,6 @@ rule merge_qc_summary:
         # Merge individual sample summaries into a single file
         awk 'FNR==1 && NR!=1 {{next}} {{print}}' 01.pre-processing/*_summary.tsv > {output.merged}
         """
-
-
 
 # ==============================================================================
 # SECTION 3: Probe-Based Sequence Reconstruction
@@ -502,7 +493,7 @@ rule build_probes_index:
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/build_bwa_index_probes.log"
+        "logs/03.probes_reconstruction/build_bwa_index_probes.log"
     message:
         "--- [MAPPING] BWA: Building probe index ---"
     shell:
@@ -535,7 +526,7 @@ rule bwa_mapping:
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/bwa_mapping_{sample}.log"
+        "logs/03.probes_reconstruction/bwa_mapping_{sample}.log"
     message:
         "--- [MAPPING] BWA: Mapping reads for {wildcards.sample} ---"
     shell:
@@ -560,7 +551,7 @@ rule bam_stats:
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/bam_stats_{sample}.log"
+        "logs/03.probes_reconstruction/bam_stats_{sample}.log"
     message:
         "--- [MAPPING] Samtools: Generating BAM statistics for {wildcards.sample} ---"
     shell:
@@ -587,7 +578,7 @@ rule extract_unmapped_reads:
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/extract_unmapped_reads_{sample}.log"
+        "logs/03.probes_reconstruction/extract_unmapped_reads_{sample}.log"
     message:
         "--- [MAPPING] Extracting unmapped reads for {wildcards.sample} ---"
     shell:
@@ -626,7 +617,7 @@ rule bcftools_consensus:
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/bcftools_consensus_{sample}.log"
+        "logs/03.probes_reconstruction/bcftools_consensus_{sample}.log"
     message:
         "--- [CONSENSUS] BCFtools: Generating consensus for {wildcards.sample} ---"
     shell:
@@ -672,7 +663,7 @@ rule reconstruction_stats:
     output:
         recon_stats = "03.probes_reconstruction/stats/{sample}_recon_stats.tsv"
     log:
-        "logs/reconstruction_stats_{sample}.log"
+        "logs/03.probes_reconstruction/reconstruction_stats_{sample}.log"
     message:
         "--- [STATS] Calculating reconstruction statistics for {wildcards.sample} ---"
     shell:
@@ -728,7 +719,7 @@ rule summary_reconstruction:
     conda:
         "envs/r_tools.yaml"
     log:
-        "logs/summary_reconstruction.log"
+        "logs/03.probes_reconstruction/summary_reconstruction.log"
     message:
         "--- [STATS] Generating reconstruction summary report ---"
     shell:
@@ -752,7 +743,7 @@ rule verify_reconstruction:
     output:
         check_file = "03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt"
     log:
-        "logs/verify_reconstruction_{sample}.log"
+        "logs/03.probes_reconstruction/verify_reconstruction_{sample}.log"
     message:
         "--- [CHECKPOINT] Verifying reconstruction for {wildcards.sample} ---"
     shell:
@@ -795,7 +786,7 @@ rule mlst_typing:
     conda:
         "envs/mlst.yaml"
     log:
-        "logs/mlst_typing.log"
+        "logs/04.mlst-typing/mlst_typing.log"
     message:
         "--- [MLST] Typing Xylella fastidiosa strains ---"
     shell:
@@ -826,7 +817,7 @@ rule extract_genes_from_references:
     conda:
         "envs/extract_genes.yaml"
     log:
-        "logs/extract_genes_from_references.log"
+        "logs/05.phylogenetic_trees/extract_genes_from_references.log"
     message:
         "--- [PHYLO] Extracting genes from reference genomes ---"
     shell:
@@ -901,7 +892,7 @@ rule prepare_alignment_files:
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/prepare_alignment_{sample}.log"
+        "logs/05.phylogenetic_trees/prepare_alignment_{sample}.log"
     message:
         "--- [PHYLO] Preparing alignment files for {wildcards.sample} ---"
     shell:
@@ -962,7 +953,7 @@ rule align_and_trim_genes:
     conda:
         "envs/phylogeny.yaml"
     log:
-        "logs/align_genes_{sample}.log"
+        "logs/05.phylogenetic_trees/align_genes_{sample}.log"
     message:
         "--- [PHYLO] Aligning genes for {wildcards.sample} ---"
     shell:
@@ -1038,7 +1029,7 @@ rule phylogenetic_analysis:
     conda:
         "envs/phylogeny.yaml"
     log:
-        "logs/phylogeny_{sample}.log"
+        "logs/05.phylogenetic_trees/phylogeny_{sample}.log"
     message:
         "--- [PHYLO] Building phylogenetic tree for {wildcards.sample} ---"
     shell:
@@ -1095,7 +1086,7 @@ rule plot_tree:
     conda:
         "envs/r_tools.yaml"
     log:
-        "logs/plot_tree_{sample}.log"
+        "logs/05.phylogenetic_trees/plot_tree_{sample}.log"
     message:
         "--- [PHYLO] Plotting phylogenetic tree for {wildcards.sample} ---"
     shell:
@@ -1148,7 +1139,7 @@ rule phylogeny_phase:
     output:
         completion = "05.phylogenetic_trees/phylogeny_analysis_complete.txt"
     log:
-        "logs/phylogeny_phase.log"
+        "logs/05.phylogenetic_trees/phylogeny_phase.log"
     message:
         "--- [PHYLO] Phase 2: Phylogenetic analysis complete ---"
     shell:
@@ -1236,7 +1227,7 @@ rule prepare_multi_alignment_files:
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/prepare_multi_alignment_files.log"
+        "logs/06.multi_phylogeny/prepare_multi_alignment_files.log"
     message:
         "--- [MULTI-PHYLO] Preparing joint alignment files ---"
     shell:
@@ -1302,7 +1293,7 @@ rule align_and_trim_multi_genes:
     conda:
         "envs/phylogeny.yaml"
     log:
-        "logs/align_multi_genes.log"
+        "logs/06.multi_phylogeny/align_multi_genes.log"
     message:
         "--- [MULTI-PHYLO] Aligning genes for the joint tree ---"
     shell:
@@ -1373,7 +1364,7 @@ rule multi_phylogenetic_analysis:
     conda:
         "envs/phylogeny.yaml"
     log:
-        "logs/multi_phylogeny.log"
+        "logs/06.multi_phylogeny/multi_phylogeny.log"
     message:
         "--- [MULTI-PHYLO] Building joint phylogenetic tree ---"
     shell:
@@ -1434,7 +1425,7 @@ rule plot_multi_tree:
     conda:
         "envs/r_tools.yaml"
     log:
-        "logs/plot_multi_tree.log"
+        "logs/06.multi_phylogeny/plot_multi_tree.log"
     message:
         "--- [MULTI-PHYLO] Plotting joint phylogenetic tree ---"
     shell:
@@ -1478,7 +1469,7 @@ rule multi_phylogeny_phase:
         n_samples = len(MULTI_SAMPLES),
         n_genes   = len(COMMON_GENES)
     log:
-        "logs/multi_phylogeny_phase.log"
+        "logs/06.multi_phylogeny/multi_phylogeny_phase.log"
     message:
         "--- [MULTI-PHYLO] Phase 3: Joint phylogenetic analysis complete ---"
     shell:
