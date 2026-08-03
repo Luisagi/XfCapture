@@ -360,10 +360,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 This work was funded by the European Union's Horizon Europe research and innovation programme under **BeXyl Grant Agreement 101060593**.
 
-**Special thanks to:**
-- The *Xylella fastidiosa* research community
-- Developers of the bioinformatics tools integrated in this pipeline
-
 ---
 
 ## Note on AI usage
