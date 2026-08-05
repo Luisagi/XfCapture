@@ -17,7 +17,8 @@ urls = { "Homepage" = "https://github.com/luisagi/XfCapture" }
 
 dependencies = [
     "pyyaml>=5.0",
-    "snakemake>=9.0"
+    "snakemake>=9.0",
+    "click>=8.0"
 ]
 
 [project.scripts]
