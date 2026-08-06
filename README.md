@@ -297,51 +297,19 @@ xf_capture multi-phylo -o results/ --samples-list samples.txt
 
 <small>
 
-- **Snakemake**: 
-  - Mölder, F., Jablonski, K. P., Letcher, B., Hall, M. B., Tomkins-Tinch, C. H., Sochat, V., Forster, J., Lee, S., Twardziok, S. O., Kanitz, A., Wilm, A., Holtgrewe, M., Rahmann, S., Nahnsen, S., & Köster, J. (2021). Sustainable data analysis with Snakemake. *F1000Research*, *10*, 33. https://doi.org/10.12688/f1000research.29032.2
-
-- **fastp**: 
-  - Chen, S., Zhou, Y., Chen, Y., & Gu, J. (2018). fastp: An ultra-fast all-in-one FASTQ preprocessor. *Bioinformatics*, *34*(17), i884–i890. https://doi.org/10.1093/bioinformatics/bty560
-
-- **MultiQC**:  
-  - Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: Summarize analysis results for multiple tools and samples in a single report. *Bioinformatics*, *32*(19), 3047-3048. https://doi.org/10.1093/bioinformatics/btw354
-
-- **Kraken2**:  
-  - Wood, D. E., Lu, J., & Langmead, B. (2019). Improved metagenomic analysis with Kraken 2. *Genome Biology*, *20*(1), 257. https://doi.org/10.1186/s13059-019-1891-0
-  - Lu, J., Rincon, N., Wood, D. E., Breitwieser, F. P., Pockrandt, C., Langmead, B., Salzberg, S. L., & Steinegger, M. (2022). Metagenome analysis using the Kraken software suite. *Nature Protocols*, *17*(12), 2815-2839. https://doi.org/10.1038/s41596-022-00738-y
-
-- **Recentrifuge**:  
-  - Martí, J. M. (2019). Recentrifuge: Robust comparative analysis and contamination removal for metagenomics. *PLOS Computational Biology*, *15*(4), e1006967. https://doi.org/10.1371/journal.pcbi.1006967
-
-- **BWA**:
-  - Li, H., & Durbin, R. (2009). Fast and accurate short read alignment with Burrows–Wheeler transform. *Bioinformatics*, *25*(14), 1754-1760. https://doi.org/10.1093/bioinformatics/btp324
-
-- **Samtools & BCFtools**:  
-  - Danecek, P., Bonfield, J. K., Liddle, J., Marshall, J., Ohan, V., Pollard, M. O., Whitwham, A., Keane, T., McCarthy, S. A., Davies, R. M., & Li, H. (2021). Twelve years of SAMtools and BCFtools. *GigaScience*, *10*(2), giab008. https://doi.org/10.1093/gigascience/giab008
-
-- **BLAST+**:  
-  - Camacho, C., Coulouris, G., Avagyan, V., Ma, N., Papadopoulos, J., Bealer, K., & Madden, T. L. (2009). BLAST+: Architecture and applications. *BMC Bioinformatics*, *10*, 421. https://doi.org/10.1186/1471-2105-10-421
-
-- **SeqKit**:  
-  - Shen, W., Le, S., Li, Y., & Hu, F. (2016). SeqKit: A cross-platform and ultrafast toolkit for FASTA/Q file manipulation. *PLOS ONE*, *11*(10), e0163962. https://doi.org/10.1371/journal.pone.0163962
-
-- **MLST**:  
-  - Seemann, T. (2024). mlst: Scan contig files against PubMLST typing schemes. https://github.com/tseemann/mlst
-  - Jolley, K. A., & Maiden, M. C. (2010). BIGSdb: Scalable analysis of bacterial genome variation at the population level. *BMC Bioinformatics*, *11*(1), 595. https://doi.org/10.1186/1471-2105-11-595
-
-- **MAFFT**:  
-  - Katoh, K., & Standley, D. M. (2013). MAFFT multiple sequence alignment software version 7: Improvements in performance and usability. *Molecular Biology and Evolution*, *30*(4), 772–780. https://doi.org/10.1093/molbev/mst010
-
-- **IQ-TREE**:  
-  - Minh, B. Q., Schmidt, H. A., Chernomor, O., Schrempf, D., Woodhams, M. D., Von Haeseler, A., & Lanfear, R. (2020). IQ-TREE 2: New models and efficient methods for phylogenetic inference in the genomic era. *Molecular Biology and Evolution*, *37*(5), 1530-1534. https://doi.org/10.1093/molbev/msaa015
-  - Chernomor, O., Von Haeseler, A., & Minh, B. Q. (2016). Terrace aware data structure for phylogenomic inference from supermatrices. *Systematic Biology*, *65*(6), 997-1008. https://doi.org/10.1093/sysbio/syw037
-  - Minh, B. Q., Nguyen, M. A. T., & Von Haeseler, A. (2013). Ultrafast approximation for phylogenetic bootstrap. *Molecular Biology and Evolution*, *30*(5), 1188–1195. https://doi.org/10.1093/molbev/mst024
-
-- **R Packages**:  
-  - R Core Team. (2025). *R: A language and environment for statistical computing*. R Foundation for Statistical Computing. https://www.R-project.org/
-  - Revell, L. J. (2024). phytools 2.0: An updated R ecosystem for phylogenetic comparative methods (and other things). *PeerJ*, *12*, e16505. https://doi.org/10.7717/peerj.16505
-  - Paradis, E., & Schliep, K. (2019). ape 5.0: An environment for modern phylogenetics and evolutionary analyses in R. *Bioinformatics*, *35*(3), 526-528. https://doi.org/10.1093/bioinformatics/bty633
-  - Yu, G., Smith, D. K., Zhu, H., Guan, Y., & Lam, T. T. Y. (2017). ggtree: An R package for visualization and annotation of phylogenetic trees with their covariates and other associated data. *Methods in Ecology and Evolution*, *8*(1), 28-36. https://doi.org/10.1111/2041-210X.12628
+- **Snakemake**: Mölder et al. (2021). *F1000Research*, *10*, 33. https://doi.org/10.12688/f1000research.29032.2
+- **fastp**: Chen et al. (2018). *Bioinformatics*, *34*(17), i884–i890. https://doi.org/10.1093/bioinformatics/bty560
+- **MultiQC**: Ewels et al. (2016). *Bioinformatics*, *32*(19), 3047-3048. https://doi.org/10.1093/bioinformatics/btw354
+- **Kraken2**: Wood et al. (2019). *Genome Biology*, *20*(1), 257. https://doi.org/10.1186/s13059-019-1891-0; Lu et al. (2022). *Nature Protocols*, *17*(12), 2815-2839. https://doi.org/10.1038/s41596-022-00738-y
+- **Recentrifuge**: Martí (2019). *PLOS Computational Biology*, *15*(4), e1006967. https://doi.org/10.1371/journal.pcbi.1006967
+- **BWA**: Li & Durbin (2009). *Bioinformatics*, *25*(14), 1754-1760. https://doi.org/10.1093/bioinformatics/btp324
+- **Samtools & BCFtools**: Danecek et al. (2021). *GigaScience*, *10*(2), giab008. https://doi.org/10.1093/gigascience/giab008
+- **BLAST+**: Camacho et al. (2009). *BMC Bioinformatics*, *10*, 421. https://doi.org/10.1186/1471-2105-10-421
+- **SeqKit**: Shen et al. (2016). *PLOS ONE*, *11*(10), e0163962. https://doi.org/10.1371/journal.pone.0163962
+- **MLST**: Seemann (2024). https://github.com/tseemann/mlst; Jolley & Maiden (2010). *BMC Bioinformatics*, *11*(1), 595. https://doi.org/10.1186/1471-2105-11-595
+- **MAFFT**: Katoh & Standley (2013). *Molecular Biology and Evolution*, *30*(4), 772–780. https://doi.org/10.1093/molbev/mst010
+- **IQ-TREE**: Minh et al. (2020). *Molecular Biology and Evolution*, *37*(5), 1530-1534. https://doi.org/10.1093/molbev/msaa015; Chernomor et al. (2016). *Systematic Biology*, *65*(6), 997-1008. https://doi.org/10.1093/sysbio/syw037; Minh et al. (2013). *Molecular Biology and Evolution*, *30*(5), 1188–1195. https://doi.org/10.1093/molbev/mst024
+- **R Packages**: R Core Team (2025). https://www.R-project.org/; Revell (2024). *PeerJ*, *12*, e16505. https://doi.org/10.7717/peerj.16505; Paradis & Schliep (2019). *Bioinformatics*, *35*(3), 526-528. https://doi.org/10.1093/bioinformatics/bty633; Yu et al. (2017). *Methods in Ecology and Evolution*, *8*(1), 28-36. https://doi.org/10.1111/2041-210X.12628
 
 </small>
 
