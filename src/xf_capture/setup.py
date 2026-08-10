@@ -23,14 +23,19 @@ USER_CONFIG_FILE = USER_CONFIG_DIR / "config.yaml"
 # tarball filename, the download URL and the MD5 file URL.
 KRAKEN2_DATABASES = {
     "8GB": {
-        "tarball": "k2_pluspf_08_GB_20251015.tar.gz",
-        "url": "https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_08_GB_20251015.tar.gz",
-        "md5_url": "https://genome-idx.s3.amazonaws.com/kraken/pluspf_08_GB_20251015/pluspf_08_GB.md5",
+        "tarball": "k2_pluspfp_08_GB_20260626.tar.gz",
+        "url": "https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_08_GB_20260626.tar.gz",
+        "md5_url": "https://genome-idx.s3.amazonaws.com/kraken/pluspfp_08_GB_20260626/pluspfp_08_GB.md5",
     },
     "16GB": {
-        "tarball": "k2_pluspf_16_GB_20251015.tar.gz",
-        "url": "https://genome-idx.s3.amazonaws.com/kraken/k2_pluspf_16_GB_20251015.tar.gz",
-        "md5_url": "https://genome-idx.s3.amazonaws.com/kraken/pluspf_16_GB_20251015/pluspf_16_GB.md5",
+        "tarball": "k2_pluspfp_16_GB_20260626.tar.gz",
+        "url": "https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_16_GB_20260626.tar.gz",
+        "md5_url": "https://genome-idx.s3.amazonaws.com/kraken/pluspfp_16_GB_20260626/pluspfp_16_GB.md5",
+    },
+    "FULL": {
+            "tarball": "k2_pluspfp_20260626.tar.gz",
+            "url": "https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_20260626.tar.gz",
+            "md5_url": "https://genome-idx.s3.amazonaws.com/kraken/pluspfp_20260626/pluspfp.md5",
     },
 }
 
@@ -224,7 +229,7 @@ def setup_workflow(workflow_dir: str, k2_db: str = "8GB") -> None:
 
     Args:
         workflow_dir: Directory where the workflow will be installed
-        k2_db: Kraken2 database size to download ("8GB" or "16GB", default: "8GB")
+        k2_db: Kraken2 database size to download ("8GB", "16GB" or "FULL", default: "8GB")
 
     Skips components that are already installed.
     """
@@ -297,7 +302,7 @@ def setup_workflow(workflow_dir: str, k2_db: str = "8GB") -> None:
     # Kraken2 database
     # --------------------------------------------------
     print("\n" + "="*70)
-    print(f"[Setup] Kraken2 database (PlusPF {k2_db})...")
+    print(f"[Setup] Kraken2 database (PlusPFP {k2_db})...")
     print("="*70)
 
     download_kraken2_database(kraken_db, db_key=k2_db)

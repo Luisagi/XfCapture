@@ -194,7 +194,7 @@ xf_capture setup --dir /path/to/xf_capture_db --k2-db "16GB"
 
 **Options:**
 - `--dir`: Workflow directory location
-- `--k2-db`: Database size (`8GB` or `16GB`, default: `8GB`)
+- `--k2-db`: Database size (`8GB`, `16GB` or `FULL`, default: `8GB`)
 
 This command creates the following structure:
 
@@ -205,6 +205,7 @@ This command creates the following structure:
 │   └── kraken2/
 │       ├── k2_pluspfp_16_GB
 │       └── k2_pluspfp_08_GB
+│       └── k2_pluspfp_FULL
 ├── reference_seqs/
 │   ├── probes.fasta
 │   └── xf_genomes/

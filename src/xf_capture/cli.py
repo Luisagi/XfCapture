@@ -99,10 +99,10 @@ def cli(ctx: click.Context) -> None:
 )
 @click.option(
     "--k2-db",
-    type=click.Choice(["8GB", "16GB"]),
+    type=click.Choice(["8GB", "16GB", "FULL"]),
     default="8GB",
     metavar="",
-    help="Kraken2 database size to download: 8GB or 16GB (default: 8GB)",
+    help="Kraken2 database size to download: 8GB, 16GB, or FULL (default: 8GB)",
 )
 def setup_cmd(dir_: str, k2_db: str) -> None:
     setup_workflow(dir_, k2_db=k2_db)
