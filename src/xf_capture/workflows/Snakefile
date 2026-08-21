@@ -784,7 +784,7 @@ rule count_genes:
         echo -e "sample_id\tgene_count" > {output.gene_counts}
         counts=$(grep "^>" -c 03.probes_reconstruction/consensus/*_target_gene_consensus.fasta | 
             sed 's/_target_gene_consensus.fasta//g' |
-            sed 's/03.probes_reconstruction\/consensus\///g' |
+            sed 's#03.probes_reconstruction/consensus/##g' |
             awk -F: '{{print $1"\t"$2}}')
         
         echo "$counts" >> {output.gene_counts}
