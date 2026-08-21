@@ -35,6 +35,8 @@ import sys
 import re
 from pathlib import Path
 
+from snakemake.exceptions import WorkflowError
+
 
 # `workflow.basedir` is set by Snakemake to this Snakefile's own directory.
 WORKFLOW_DIR = Path(workflow.basedir).resolve()
@@ -85,6 +87,13 @@ SAMPLES = SAMPLES_DICT.keys()
 print(f"\nTotal samples found: {len(SAMPLES)}")
 for sample, (r1, r2) in SAMPLES_DICT.items():
     print(f"  - {sample}:\n      R1 → {r1}\n      R2 → {r2}")
+
+if len(SAMPLES) == 0:
+    raise WorkflowError(
+        f"No FASTQ samples found in input directory: {INPUT_DIR}\n"
+        f"Expected paired-end files with one of these extensions: {VALID_EXTENSIONS}\n"
+        "Please check the input directory path and file naming."
+    )
 
 # Reference Xf genomes used for Phase 2/3 gene extraction and phylogeny.
 XF_DICT = get_fasta_files(XF_REFS)
@@ -170,14 +179,13 @@ rule all:
         # Probe reconstruction outputs
         bam_stats=            expand("03.probes_reconstruction/stats/{sample}_mapped_stats.tsv", sample=SAMPLES),
         consensus_filtered=   expand("03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta", sample=SAMPLES),
-        recon_stats=          expand("03.probes_reconstruction/stats/{sample}_recon_stats.tsv", sample=SAMPLES),
-        summary_stats=        "03.probes_reconstruction/reconstruction_summary.xlsx",
         unmapped_R1=          expand("03.probes_reconstruction/unmapped/{sample}_unmapped_R1.fastq.gz", sample=SAMPLES),
         unmapped_R2=          expand("03.probes_reconstruction/unmapped/{sample}_unmapped_R2.fastq.gz", sample=SAMPLES),
 
         # MLST and checkpoint outputs
         mlst=                 "04.mlst-typing/mlst_summary.csv",
-        checkpoint=           expand("03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt", sample=SAMPLES)
+        checkpoint=           expand("03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt", sample=SAMPLES),
+        report =              "pipeline_report.xlsx"
 
 
 # ==============================================================================
@@ -557,7 +565,9 @@ rule bam_stats:
     shell:
         """
         samtools index {input.bam}
-        (echo -e "#Refsequence\tSequence_length\tMapped_read_segments\tUnmapped_read_segments"; samtools idxstats {input.bam}) > {output.stats}
+        # (echo -e "#Refsequence\tSequence_length\tMapped_read_segments\tUnmapped_read_segments"; samtools idxstats {input.bam}) > {output.stats}
+
+        samtools coverage {input.bam} > {output.stats} 2>> {log}
         """
 
 
@@ -613,7 +623,7 @@ rule bcftools_consensus:
     params:
         fasta     = config["references"]["probes"],
         ploidy    = 1,
-        min_depth = 3
+        min_depth = 1
     conda:
         "envs/mapping.yaml"
     log:
@@ -649,86 +659,55 @@ rule bcftools_consensus:
         """
 
 
-rule reconstruction_stats:
-    """
-    Calculate reconstruction statistics for consensus sequences.
+# rule reconstruction_stats:
+#     """
+#     Calculate reconstruction statistics for consensus sequences.
 
-    Computes per-sequence statistics including:
-      - Sequence length
-      - Number of reconstructed bases
-      - Reconstruction percentage
-    """
-    input:
-        consensus = "03.probes_reconstruction/consensus/{sample}_cns_raw.fasta"
-    output:
-        recon_stats = "03.probes_reconstruction/stats/{sample}_recon_stats.tsv"
-    log:
-        "logs/03.probes_reconstruction/reconstruction_stats_{sample}.log"
-    message:
-        "--- [STATS] Calculating reconstruction statistics for {wildcards.sample} ---"
-    shell:
-        """
-        echo -e "#Refsequence\tSequence_length\tReconstructed_bases\tReconstruction_percent" > {output.recon_stats}
+#     Computes per-sequence statistics including:
+#       - Sequence length
+#       - Number of reconstructed bases
+#       - Reconstruction percentage
+#     """
+#     input:
+#         consensus = "03.probes_reconstruction/consensus/{sample}_cns_raw.fasta"
+#     output:
+#         recon_stats = "03.probes_reconstruction/stats/{sample}_recon_stats.tsv"
+#     log:
+#         "logs/03.probes_reconstruction/reconstruction_stats_{sample}.log"
+#     message:
+#         "--- [STATS] Calculating reconstruction statistics for {wildcards.sample} ---"
+#     shell:
+#         """
+#         echo -e "#Refsequence\tSequence_length\tReconstructed_bases\tReconstruction_percent" > {output.recon_stats}
 
-        awk '
-            BEGIN {{ OFS = "\\t" }}
-            /^>/ {{
-                if (seq != "") {{
-                    len = length(seq)
-                    n = gsub(/[Nn]/, "", seq)
-                    recon = ((len - n) / len) * 100
-                    print substr(header, 2), len, len - n, recon >> "{output.recon_stats}"
+#         awk '
+#             BEGIN {{ OFS = "\\t" }}
+#             /^>/ {{
+#                 if (seq != "") {{
+#                     len = length(seq)
+#                     n = gsub(/[Nn]/, "", seq)
+#                     recon = ((len - n) / len) * 100
+#                     print substr(header, 2), len, len - n, recon >> "{output.recon_stats}"
 
-                    if (recon < 100) {{
-                        print "WARNING: Low reconstruction for " substr(header, 2) ": " recon "%" >> "{log}"
-                    }}
-                    seq = ""
-                }}
-                header = $0
-                next
-            }}
-            {{ seq = seq $0 }}
-            END {{
-                if (seq != "") {{
-                    len = length(seq)
-                    n = gsub(/[Nn]/, "", seq)
-                    recon = ((len - n) / len) * 100
-                    print substr(header, 2), len, len - n, recon >> "{output.recon_stats}"
-                }}
-            }}
-        ' {input.consensus} > {log} 2>&1
-        """
-
-
-rule summary_reconstruction:
-    """
-    Generate summary Excel report for all reconstruction statistics.
-
-    Aggregates per-sample statistics into a comprehensive summary file
-    using an R script (reconstruction_summary.R) for data processing and
-    formatting.
-    """
-    input:
-        recon_stats  = expand("03.probes_reconstruction/stats/{sample}_recon_stats.tsv", sample=SAMPLES),
-        mapped_stats = expand("03.probes_reconstruction/stats/{sample}_mapped_stats.tsv", sample=SAMPLES)
-    output:
-        summary_out = "03.probes_reconstruction/reconstruction_summary.xlsx"
-    params:
-        stats_dir      = "03.probes_reconstruction/stats/",
-        summary_script = str(UTILS_DIR / "reconstruction_summary.R")
-    conda:
-        "envs/r_tools.yaml"
-    log:
-        "logs/03.probes_reconstruction/summary_reconstruction.log"
-    message:
-        "--- [STATS] Generating reconstruction summary report ---"
-    shell:
-        """
-        unset R_HOME
-        export R_LIBS_USER=""
-        export R_LIBS_SITE=""
-        Rscript {params.summary_script} {params.stats_dir} {output.summary_out} >> {log} 2>&1
-        """
+#                     if (recon < 100) {{
+#                         print "WARNING: Low reconstruction for " substr(header, 2) ": " recon "%" >> "{log}"
+#                     }}
+#                     seq = ""
+#                 }}
+#                 header = $0
+#                 next
+#             }}
+#             {{ seq = seq $0 }}
+#             END {{
+#                 if (seq != "") {{
+#                     len = length(seq)
+#                     n = gsub(/[Nn]/, "", seq)
+#                     recon = ((len - n) / len) * 100
+#                     print substr(header, 2), len, len - n, recon >> "{output.recon_stats}"
+#                 }}
+#             }}
+#         ' {input.consensus} > {log} 2>&1
+#         """
 
 
 rule verify_reconstruction:
@@ -791,9 +770,89 @@ rule mlst_typing:
         "--- [MLST] Typing Xylella fastidiosa strains ---"
     shell:
         """
-        mlst --threads {resources.threads} --csv --nopath {input.consensus} >> {output.mlst} 2>> {log}
+        mlst --threads {resources.threads} --csv --full --nopath {input.consensus} 2>> {log} \
+            | sed -E 's/^([^,]+)_cns_raw\\.fasta,/\\1,/' >> {output.mlst}
         """
 
+rule count_genes:
+    input:
+        consensus = expand("03.probes_reconstruction/consensus/{sample}_cns_raw.fasta", sample=SAMPLES)
+    output:
+        gene_counts = temp("03.probes_reconstruction/gene_per_sample_counts.tsv")
+    shell:
+        """
+        echo -e "sample_id\tgene_count" > {output.gene_counts}
+        counts=$(grep "^>" -c 03.probes_reconstruction/consensus/*_target_gene_consensus.fasta | 
+            sed 's/_target_gene_consensus.fasta//g' |
+            sed 's/03.probes_reconstruction\/consensus\///g' |
+            awk -F: '{{print $1"\t"$2}}')
+        
+        echo "$counts" >> {output.gene_counts}
+        """
+
+# rule summary_reconstruction:
+#     """
+#     Generate summary Excel report for all reconstruction statistics.
+
+#     Aggregates per-sample statistics into a comprehensive summary file
+#     using an R script (reconstruction_summary.R) for data processing and
+#     formatting.
+#     """
+#     input:
+#         recon_stats  = expand("03.probes_reconstruction/stats/{sample}_recon_stats.tsv", sample=SAMPLES),
+#         mapped_stats = expand("03.probes_reconstruction/stats/{sample}_mapped_stats.tsv", sample=SAMPLES)
+#     output:
+#         summary_out = "03.probes_reconstruction/reconstruction_summary.xlsx"
+#     params:
+#         stats_dir      = "03.probes_reconstruction/stats/",
+#         summary_script = str(UTILS_DIR / "reconstruction_summary.R")
+#     conda:
+#         "envs/r_tools.yaml"
+#     log:
+#         "logs/03.probes_reconstruction/summary_reconstruction.log"
+#     message:
+#         "--- [STATS] Generating reconstruction summary report ---"
+#     shell:
+#         """
+#         unset R_HOME
+#         export R_LIBS_USER=""
+#         export R_LIBS_SITE=""
+#         Rscript {params.summary_script} {params.stats_dir} {output.summary_out} >> {log} 2>&1
+#         """
+
+rule report:
+    """
+    Generate a report summarizing the entire pipeline.
+    """
+    input:
+        qc_summary   = "01.pre-processing/preprocessing_summary_stats.tsv",
+        genes_counts = "03.probes_reconstruction/gene_per_sample_counts.tsv",
+        mlst_summary = "04.mlst-typing/mlst_summary.csv",
+        mapped_stats = expand("03.probes_reconstruction/stats/{sample}_mapped_stats.tsv", sample=SAMPLES)
+    output:
+        report = "pipeline_report.xlsx"
+    params:
+        stats_dir      = "03.probes_reconstruction/stats/",
+        report_script = str(UTILS_DIR / "generate_report.R")
+    conda:
+        "envs/r_tools.yaml"
+    log:
+        "logs/05.pipeline_report/report_generation.log"
+    message:
+        "--- [REPORT] Generating comprehensive pipeline report ---"
+    shell:
+        """
+        unset R_HOME
+        export R_LIBS_USER=""
+        export R_LIBS_SITE=""
+        Rscript \
+            {params.report_script} \
+            {input.qc_summary} \
+            {input.genes_counts} \
+            {input.mlst_summary} \
+            {params.stats_dir} \
+            {output.report} >> {log} 2>&1
+        """
 
 # ==============================================================================
 # PHASE 2: Phylogenetic Analysis (for successful samples only)
