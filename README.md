@@ -320,11 +320,6 @@ xf_capture multi-phylo -o results/ --samples-list samples.txt
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
-
-## Authors and Contributors
-- [ ... ]
-
 ## Acknowledgments
 
 This work was funded by the European Union's Horizon Europe research and innovation programme under **BeXyl Grant Agreement 101060593**.
