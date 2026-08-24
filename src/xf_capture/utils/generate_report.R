@@ -125,7 +125,7 @@ mlst_res <- args[3]
 #   Rscript script.R qc.tsv genes.tsv mlst.csv file1.tsv file2.tsv ... output.xlsx
 if (length(args) >= 4 && dir.exists(args[4])) {
   stats_dir <- args[4]
-  output_file <- if (length(args) >= 5) args[5] else "pipeline_report.xlsx"
+  output_file <- if (length(args) >= 5) args[5] else "run_summary.xlsx"
 } else {
   stats_dir <- dirname(args[4])
   output_file <- args[length(args)]
@@ -162,13 +162,16 @@ wb <- createWorkbook()
 # Add the main summary sheet
 addWorksheet(wb, "General_summary")
 writeData(wb, "General_summary", summary)
+setColWidths(wb, "General_summary", cols = seq_len(ncol(summary)), widths = "auto")
 
 # Add sheets for detailed mapping statistics
 addWorksheet(wb, "Coverage_Percentage")
 writeData(wb, "Coverage_Percentage", sorted_data$cover_summary)
+setColWidths(wb, "Coverage_Percentage", cols = seq_len(ncol(sorted_data$cover_summary)), widths = "auto")
 
 addWorksheet(wb, "Mapped_Reads")
 writeData(wb, "Mapped_Reads", sorted_data$mapped_summary)
+setColWidths(wb, "Mapped_Reads", cols = seq_len(ncol(sorted_data$mapped_summary)), widths = "auto")
 
 # Save the workbook to the specified output file
 saveWorkbook(wb, output_file, overwrite = TRUE)

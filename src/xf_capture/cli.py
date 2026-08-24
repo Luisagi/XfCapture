@@ -205,6 +205,16 @@ def setup_cmd(dir_: str, k2_db: str) -> None:
     default=False,
     help="Enable Kraken2 memory mapping mode (avoids loading entire database into RAM, default: False)",
 )
+@click.option(
+    "--verbose",
+    type=click.IntRange(0, 2),
+    default=1,
+    metavar="",
+    help=(
+        "Snakemake output verbosity: 0=--quiet, 1=--quiet rules, "
+        "2=full Snakemake output (default: 1)"
+    ),
+)
 @click.argument("extra_args", nargs=-1, type=click.UNPROCESSED)
 def run_cmd(
     input_dir: str,
@@ -219,6 +229,7 @@ def run_cmd(
     kraken_threads: int,
     no_auto: bool,
     k2_mapping_memory: bool,
+    verbose: int,
     extra_args: tuple,
 ) -> None:
     missing = []
@@ -245,6 +256,7 @@ def run_cmd(
         iqtree_threads=iqtree_threads,
         auto=not no_auto,
         k2_mapping_memory=k2_mapping_memory,
+        verbose=verbose,
         extra_args=list(extra_args) if extra_args else None,
     )
 

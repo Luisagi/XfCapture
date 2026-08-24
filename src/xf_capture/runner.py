@@ -110,13 +110,14 @@ def run_pipeline(
     kraken_threads: int = 8,
     auto: bool = True,
     k2_mapping_memory: bool = False,
+    verbose: int = 1,
     extra_args: list | None = None,
 ) -> None:
     """
     Run the XfCapture pipeline.
 
     This function coordinates the Snakemake workflow execution in two phases:
-    1. Phase 1: QC, taxonomy, probes reconstruction, and MLST
+    1. Phase 1: QC, taxonomy, target gene recovery, and MLST
     2. Phase 2: Phylogenetic analysis (only for successful samples)
 
     Args:
@@ -132,6 +133,10 @@ def run_pipeline(
         kraken_threads: Number of threads per Kraken2 job
         auto: Continue to Phase 2 automatically without prompting
         k2_mapping_memory: Enable Kraken2 memory mapping mode
+        verbose: Snakemake output verbosity level. 0 maps to Snakemake's
+            `--quiet` (near-silent), 1 to `--quiet rules` (hides per-job
+            "Job N / Reason" blocks, keeps progress and summary), 2 runs
+            Snakemake without `--quiet` (full output)
         extra_args: Additional arguments to pass to Snakemake
     """
     print("\n" + "="*70)
@@ -204,6 +209,12 @@ def run_pipeline(
     if conda_prefix and conda_prefix.exists():
         snakemake_cmd.extend(["--conda-prefix", str(conda_prefix)])
 
+    if verbose == 0:
+        snakemake_cmd.append("--quiet")
+    elif verbose == 1:
+        snakemake_cmd.extend(["--quiet", "rules"])
+    # verbose == 2: run Snakemake without --quiet (full output)
+
     if extra_args:
         snakemake_cmd.extend(extra_args)
 
@@ -230,10 +241,10 @@ def run_pipeline(
     # Check for successful samples
     # -------------------------------------------------------------------------
     output_path = Path(output_dir).resolve()
-    checkpoint_dir = output_path / "03.probes_reconstruction" / "checkpoint"
+    checkpoint_dir = output_path / "03.target_gene_recovery" / "checkpoint"
 
     if checkpoint_dir.exists():
-        checkpoint_files = list(checkpoint_dir.glob("*_reconstruction_check.txt"))
+        checkpoint_files = list(checkpoint_dir.glob("*_recovery_check.txt"))
         successful = 0
         for f in checkpoint_files:
             content = f.read_text()

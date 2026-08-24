@@ -9,20 +9,19 @@
 # PHASE 1 (rule all) - one job per sample:
 #   - Quality control & read trimming                  (fastp, MultiQC)
 #   - Taxonomic classification                         (Kraken2, Recentrifuge)
-#   - Probe-based sequence reconstruction               (BWA, BCFtools)
+#   - Target gene recovery                             (BWA, BCFtools)
 #   - MLST typing
 #
-# PHASE 2 (rule phylogeny_phase) - one tree per successfully reconstructed
+# PHASE 2 (rule phylogeny_phase) - one tree per successfully recovered
 # sample, sample vs. reference genomes:
-#   - Gene extraction from references                  (BLAST+, BEDTools)
+#   - Gene extraction from references                   (BLAST+, BEDTools)
 #   - Multiple sequence alignment                       (MAFFT, ClipKit)
 #   - Phylogenetic reconstruction                       (AMAS, IQ-TREE)
 #   - Tree visualization                                (R/ggtree)
 #
 # PHASE 3 (rule multi_phylogeny_phase) - a SINGLE joint tree built from a
 # user-selected subset of samples (xf_capture multi-phylo --samples-list),
-# restricted to the genes reconstructed in ALL of them. Mirrors Phase 2's
-# rules but drops the {sample} wildcard since it operates on one fixed set.
+# restricted to the genes recovered in ALL of them.
 # ===============================================================================
 
 
@@ -125,16 +124,6 @@ if "multiphylo" in config:
 def get_r1_wrapper(wildcards):
     """
     Resolve the R1 FASTQ path for `rule fastp`'s {sample} wildcard.
-
-    Snakemake input functions must accept a single `wildcards` argument;
-    this thin wrapper adapts `get_r1()` (which also needs SAMPLES_DICT) to
-    that signature.
-
-    Args:
-        wildcards: Snakemake wildcards object, must expose `.sample`.
-
-    Returns:
-        str: Absolute path to the sample's R1 FASTQ file.
     """
     return get_r1(wildcards, SAMPLES_DICT)
 
@@ -155,17 +144,10 @@ def get_r2_wrapper(wildcards):
 
 
 # ===============================================================================
-# PHASE 1: Main Pipeline (QC -> Taxonomy -> Reconstruction -> MLST)
+# PHASE 1: Main Pipeline (QC -> Taxonomy -> Target Gene Recovery -> MLST)
 # ===============================================================================
 
 rule all:
-    """
-    Phase 1 target rule.
-
-    Executes the main pipeline up to MLST typing and per-sample
-    reconstruction checkpoints. This is the implicit default target used by
-    `xf_capture run` (no explicit target = Snakemake's first rule = `all`).
-    """
     input:
         # Quality control outputs
         fastp_report=         expand("01.pre-processing/fastp/{sample}_fastp.html", sample=SAMPLES),
@@ -176,16 +158,16 @@ rule all:
         xf_reads_R1=          expand("02.tax-classification/xf_taxid_2370/{sample}_R1.fastq.gz", sample=SAMPLES),
         xf_reads_R2=          expand("02.tax-classification/xf_taxid_2370/{sample}_R2.fastq.gz", sample=SAMPLES),
 
-        # Probe reconstruction outputs
-        bam_stats=            expand("03.probes_reconstruction/stats/{sample}_mapped_stats.tsv", sample=SAMPLES),
-        consensus_filtered=   expand("03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta", sample=SAMPLES),
-        unmapped_R1=          expand("03.probes_reconstruction/unmapped/{sample}_unmapped_R1.fastq.gz", sample=SAMPLES),
-        unmapped_R2=          expand("03.probes_reconstruction/unmapped/{sample}_unmapped_R2.fastq.gz", sample=SAMPLES),
+        # Target gene recovery outputs
+        bam_stats=            expand("03.target_gene_recovery/stats/{sample}_mapped_stats.tsv", sample=SAMPLES),
+        consensus_filtered=   expand("03.target_gene_recovery/gene_consensus/{sample}_gene_consensus_filtered.fasta", sample=SAMPLES),
+        unmapped_R1=          expand("03.target_gene_recovery/unmapped/{sample}_unmapped_R1.fastq.gz", sample=SAMPLES),
+        unmapped_R2=          expand("03.target_gene_recovery/unmapped/{sample}_unmapped_R2.fastq.gz", sample=SAMPLES),
 
         # MLST and checkpoint outputs
         mlst=                 "04.mlst-typing/mlst_summary.csv",
-        checkpoint=           expand("03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt", sample=SAMPLES),
-        report =              "pipeline_report.xlsx"
+        checkpoint=           expand("03.target_gene_recovery/checkpoint/{sample}_recovery_check.txt", sample=SAMPLES),
+        report =              "run_summary.xlsx"
 
 
 # ==============================================================================
@@ -195,12 +177,6 @@ rule all:
 rule fastp:
     """
     Quality control and adapter trimming using fastp.
-
-    Processes paired-end reads to:
-      - Detect and remove adapters
-      - Filter low-quality reads (Q < 25)
-      - Remove short reads (< 50 bp)
-      - Trim low-quality bases from ends
     """
     input:
         r1  = get_r1_wrapper,
@@ -274,9 +250,6 @@ rule fastp:
 rule kraken2:
     """
     Taxonomic classification of reads using Kraken2.
-
-    Classifies trimmed reads against a pre-built Kraken2 database to identify
-    taxonomic composition and filter Xylella fastidiosa reads.
     """
     input:
         r1 = "01.pre-processing/fastp/{sample}_trim_R1.fastq",
@@ -315,10 +288,6 @@ rule kraken2:
 rule download_taxdump:
     """
     Download NCBI taxonomy database files for Recentrifuge.
-
-    Downloads and extracts the taxdump files required for generating
-    taxonomic visualization reports. High `priority` so Snakemake schedules
-    this network-bound job early rather than at the end of the DAG.
     """
     output:
         tax_dump = temp(directory("02.tax-classification/tax_dump"))
@@ -348,9 +317,6 @@ rule download_taxdump:
 rule recentrifuge:
     """
     Generate interactive taxonomic classification report using Recentrifuge.
-
-    Creates an HTML report visualizing the taxonomic composition of all samples
-    based on Kraken2 classification results.
     """
     input:
         k2_rep   = expand("02.tax-classification/{sample}.krk", sample=SAMPLES),
@@ -385,8 +351,7 @@ rule extract_xf_reads:
     Extract Xylella fastidiosa reads from Kraken2 output.
 
     Uses KrakenTools to filter reads classified as Xylella fastidiosa
-    (taxID 2370) including all child taxa (i.e. named subspecies/strains)
-    for downstream analysis.
+    (taxID 2370) including all child taxa downstream analysis.
     """
     input:
         r1     = "01.pre-processing/fastp/{sample}_trim_R1.fastq",
@@ -479,29 +444,27 @@ rule merge_qc_summary:
         """
 
 # ==============================================================================
-# SECTION 3: Probe-Based Sequence Reconstruction
+# SECTION 3: Target Gene Recovery
 # ==============================================================================
 
 rule build_probes_index:
     """
-    Build BWA index for probe sequences.
-
-    Creates the index files required for mapping reads to the probe reference.
+    Build BWA index for reference sequences.
     """
     input:
         fasta = config["references"]["probes"]
     output:
-        index1 = temp("03.probes_reconstruction/probes.amb"),
-        index2 = temp("03.probes_reconstruction/probes.ann"),
-        index3 = temp("03.probes_reconstruction/probes.bwt"),
-        index4 = temp("03.probes_reconstruction/probes.pac"),
-        index5 = temp("03.probes_reconstruction/probes.sa")
+        index1 = temp("03.target_gene_recovery/probes.amb"),
+        index2 = temp("03.target_gene_recovery/probes.ann"),
+        index3 = temp("03.target_gene_recovery/probes.bwt"),
+        index4 = temp("03.target_gene_recovery/probes.pac"),
+        index5 = temp("03.target_gene_recovery/probes.sa")
     params:
-        basename = "03.probes_reconstruction/probes"
+        basename = "03.target_gene_recovery/probes"
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/03.probes_reconstruction/build_bwa_index_probes.log"
+        "logs/03.target_gene_recovery/build_bwa_index_probes.log"
     message:
         "--- [MAPPING] BWA: Building probe index ---"
     shell:
@@ -512,29 +475,26 @@ rule build_probes_index:
 
 rule bwa_mapping:
     """
-    Map Xylella fastidiosa reads to probe sequences using BWA-MEM.
-
-    Aligns the extracted Xf reads to the probe reference and produces
-    a sorted BAM file for variant calling.
+    Map Xylella fastidiosa reads to reference sequences using BWA-MEM.
     """
     input:
-        index1 = "03.probes_reconstruction/probes.amb",
-        index2 = "03.probes_reconstruction/probes.ann",
-        index3 = "03.probes_reconstruction/probes.bwt",
-        index4 = "03.probes_reconstruction/probes.pac",
-        index5 = "03.probes_reconstruction/probes.sa",
+        index1 = "03.target_gene_recovery/probes.amb",
+        index2 = "03.target_gene_recovery/probes.ann",
+        index3 = "03.target_gene_recovery/probes.bwt",
+        index4 = "03.target_gene_recovery/probes.pac",
+        index5 = "03.target_gene_recovery/probes.sa",
         r1     = "02.tax-classification/xf_taxid_2370/{sample}_R1.fastq.gz",
         r2     = "02.tax-classification/xf_taxid_2370/{sample}_R2.fastq.gz"
     output:
-        bam_sorted = temp("03.probes_reconstruction/{sample}_mapped.sorted.bam")
+        bam_sorted = temp("03.target_gene_recovery/{sample}_mapped.sorted.bam")
     params:
-        db = "03.probes_reconstruction/probes"
+        db = "03.target_gene_recovery/probes"
     resources:
         threads = 4
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/03.probes_reconstruction/bwa_mapping_{sample}.log"
+        "logs/03.target_gene_recovery/bwa_mapping_{sample}.log"
     message:
         "--- [MAPPING] BWA: Mapping reads for {wildcards.sample} ---"
     shell:
@@ -547,19 +507,16 @@ rule bwa_mapping:
 rule bam_stats:
     """
     Generate mapping statistics from BAM file.
-
-    Creates a TSV file with per-reference sequence mapping statistics
-    including read counts and coverage information.
     """
     input:
-        bam = "03.probes_reconstruction/{sample}_mapped.sorted.bam"
+        bam = "03.target_gene_recovery/{sample}_mapped.sorted.bam"
     output:
-        stats = "03.probes_reconstruction/stats/{sample}_mapped_stats.tsv",
-        bai   = temp("03.probes_reconstruction/{sample}_mapped.sorted.bam.bai")
+        stats = "03.target_gene_recovery/stats/{sample}_mapped_stats.tsv",
+        bai   = temp("03.target_gene_recovery/{sample}_mapped.sorted.bam.bai")
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/03.probes_reconstruction/bam_stats_{sample}.log"
+        "logs/03.target_gene_recovery/bam_stats_{sample}.log"
     message:
         "--- [MAPPING] Samtools: Generating BAM statistics for {wildcards.sample} ---"
     shell:
@@ -573,24 +530,21 @@ rule bam_stats:
 
 rule extract_unmapped_reads:
     """
-    Extract unmapped reads from BAM file.
-
-    Retrieves paired reads that did not map to probe sequences for
-    potential further analysis or quality assessment.
+    Extract unmapped Xf's reads from BAM file.
     """
     input:
-        bam = "03.probes_reconstruction/{sample}_mapped.sorted.bam"
+        bam = "03.target_gene_recovery/{sample}_mapped.sorted.bam"
     output:
-        unmapped_R1 = "03.probes_reconstruction/unmapped/{sample}_unmapped_R1.fastq.gz",
-        unmapped_R2 = "03.probes_reconstruction/unmapped/{sample}_unmapped_R2.fastq.gz"
+        unmapped_R1 = "03.target_gene_recovery/unmapped/{sample}_unmapped_R1.fastq.gz",
+        unmapped_R2 = "03.target_gene_recovery/unmapped/{sample}_unmapped_R2.fastq.gz"
     resources:
         threads = 4
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/03.probes_reconstruction/extract_unmapped_reads_{sample}.log"
+        "logs/03.target_gene_recovery/extract_unmapped_reads_{sample}.log"
     message:
-        "--- [MAPPING] Extracting unmapped reads for {wildcards.sample} ---"
+        "--- [MAPPING] Extracting unmapped Xf's reads for {wildcards.sample} ---"
     shell:
         """
         samtools sort -n {input.bam} 2>> {log} | \
@@ -607,19 +561,19 @@ rule bcftools_consensus:
 
     Performs variant calling on mapped reads and generates:
       - VCF file with called variants
-      - BED file masking low-coverage regions (< 3x)
+      - BED file masking low-coverage regions (< 1x)
       - Consensus FASTA with Ns for low-coverage positions
       - Filtered consensus with only complete sequences (no Ns)
     """
     input:
-        bam = "03.probes_reconstruction/{sample}_mapped.sorted.bam"
+        bam = "03.target_gene_recovery/{sample}_mapped.sorted.bam"
     output:
-        vcf                = temp("03.probes_reconstruction/consensus/{sample}.vcf.gz"),
-        csi                = temp("03.probes_reconstruction/consensus/{sample}.vcf.gz.csi"),
-        bed                = temp("03.probes_reconstruction/consensus/{sample}_lowcov.bed"),
-        consensus          = "03.probes_reconstruction/consensus/{sample}_cns_raw.fasta",
-        consensus_noN      = temp("03.probes_reconstruction/consensus/{sample}_consensus_noN.fasta"),
-        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta"
+        vcf                = temp("03.target_gene_recovery/gene_consensus/{sample}.vcf.gz"),
+        csi                = temp("03.target_gene_recovery/gene_consensus/{sample}.vcf.gz.csi"),
+        bed                = temp("03.target_gene_recovery/gene_consensus/{sample}_lowcov.bed"),
+        consensus          = "03.target_gene_recovery/gene_consensus/{sample}_gene_consensus_unfiltered.fasta",
+        consensus_noN      = temp("03.target_gene_recovery/gene_consensus/{sample}_consensus_noN.fasta"),
+        consensus_filtered = "03.target_gene_recovery/gene_consensus/{sample}_gene_consensus_filtered.fasta"
     params:
         fasta     = config["references"]["probes"],
         ploidy    = 1,
@@ -627,7 +581,7 @@ rule bcftools_consensus:
     conda:
         "envs/mapping.yaml"
     log:
-        "logs/03.probes_reconstruction/bcftools_consensus_{sample}.log"
+        "logs/03.target_gene_recovery/bcftools_consensus_{sample}.log"
     message:
         "--- [CONSENSUS] BCFtools: Generating consensus for {wildcards.sample} ---"
     shell:
@@ -654,90 +608,35 @@ rule bcftools_consensus:
         # 6. Plasmid genes only (no Ns, only if present)
         if grep -q "^>plasmid__"  {output.consensus_noN}; then
             seqkit grep -r -p "^plasmid__" {output.consensus_noN} \
-            > 03.probes_reconstruction/consensus/{wildcards.sample}_plasmid_consensus.fasta
+            > 03.target_gene_recovery/gene_consensus/{wildcards.sample}_plasmid_consensus.fasta
         fi
         """
 
-
-# rule reconstruction_stats:
-#     """
-#     Calculate reconstruction statistics for consensus sequences.
-
-#     Computes per-sequence statistics including:
-#       - Sequence length
-#       - Number of reconstructed bases
-#       - Reconstruction percentage
-#     """
-#     input:
-#         consensus = "03.probes_reconstruction/consensus/{sample}_cns_raw.fasta"
-#     output:
-#         recon_stats = "03.probes_reconstruction/stats/{sample}_recon_stats.tsv"
-#     log:
-#         "logs/03.probes_reconstruction/reconstruction_stats_{sample}.log"
-#     message:
-#         "--- [STATS] Calculating reconstruction statistics for {wildcards.sample} ---"
-#     shell:
-#         """
-#         echo -e "#Refsequence\tSequence_length\tReconstructed_bases\tReconstruction_percent" > {output.recon_stats}
-
-#         awk '
-#             BEGIN {{ OFS = "\\t" }}
-#             /^>/ {{
-#                 if (seq != "") {{
-#                     len = length(seq)
-#                     n = gsub(/[Nn]/, "", seq)
-#                     recon = ((len - n) / len) * 100
-#                     print substr(header, 2), len, len - n, recon >> "{output.recon_stats}"
-
-#                     if (recon < 100) {{
-#                         print "WARNING: Low reconstruction for " substr(header, 2) ": " recon "%" >> "{log}"
-#                     }}
-#                     seq = ""
-#                 }}
-#                 header = $0
-#                 next
-#             }}
-#             {{ seq = seq $0 }}
-#             END {{
-#                 if (seq != "") {{
-#                     len = length(seq)
-#                     n = gsub(/[Nn]/, "", seq)
-#                     recon = ((len - n) / len) * 100
-#                     print substr(header, 2), len, len - n, recon >> "{output.recon_stats}"
-#                 }}
-#             }}
-#         ' {input.consensus} > {log} 2>&1
-#         """
-
-
-rule verify_reconstruction:
+rule verify_gene_recovery:
     """
-    Checkpoint: verify successful probe reconstruction for each sample.
-
-    NOTE: this is a plain rule producing a marker file, NOT a Snakemake
-    `checkpoint:` directive (no dynamic DAG re-evaluation happens here).
+    Checkpoint: verify successful target gene recovery for each sample.
     """
     input:
-        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta"
+        consensus_filtered = "03.target_gene_recovery/gene_consensus/{sample}_gene_consensus_filtered.fasta"
     output:
-        check_file = "03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt"
+        check_file = "03.target_gene_recovery/checkpoint/{sample}_recovery_check.txt"
     log:
-        "logs/03.probes_reconstruction/verify_reconstruction_{sample}.log"
+        "logs/03.target_gene_recovery/verify_gene_recovery_{sample}.log"
     message:
-        "--- [CHECKPOINT] Verifying reconstruction for {wildcards.sample} ---"
+        "--- [CHECKPOINT] Verifying gene recovery for {wildcards.sample} ---"
     shell:
         """
         mkdir -p $(dirname {output.check_file})
 
         if [ -s {input.consensus_filtered} ] && grep -q "^>" {input.consensus_filtered}; then
-            echo "SUCCESS: Sample {wildcards.sample} has reconstructed sequences" > {output.check_file}
-            echo "Reconstruction successful for sample {wildcards.sample}" >> {log}
+            echo "SUCCESS: Sample {wildcards.sample} has recovered target genes" > {output.check_file}
+            echo "Gene recovery successful for sample {wildcards.sample}" >> {log}
 
             seq_count=$(grep -c "^>" {input.consensus_filtered})
-            echo "Total sequences reconstructed: $seq_count" >> {output.check_file}
-            echo "Total sequences reconstructed: $seq_count" >> {log}
+            echo "Total genes recovered: $seq_count" >> {output.check_file}
+            echo "Total genes recovered: $seq_count" >> {log}
         else
-            echo "FAILED: Sample {wildcards.sample} has no reconstructed sequences" > {output.check_file}
+            echo "FAILED: Sample {wildcards.sample} has no recovered target genes" > {output.check_file}
             echo "No sequences found in {input.consensus_filtered}" >> {log}
             echo "This sample will be excluded from downstream analyses" >> {output.check_file}
             echo "Sample {wildcards.sample} excluded from downstream analysis" >> {log}
@@ -752,12 +651,9 @@ rule verify_reconstruction:
 rule mlst_typing:
     """
     MLST typing of Xylella fastidiosa strains.
-
-    Uses the MLST tool to identify sequence types based on the
-    reconstructed consensus sequences from all samples.
     """
     input:
-        consensus = expand("03.probes_reconstruction/consensus/{sample}_cns_raw.fasta", sample=SAMPLES)
+        consensus = expand("03.target_gene_recovery/gene_consensus/{sample}_gene_consensus_unfiltered.fasta", sample=SAMPLES)
     output:
         mlst = "04.mlst-typing/mlst_summary.csv"
     resources:
@@ -771,20 +667,20 @@ rule mlst_typing:
     shell:
         """
         mlst --threads {resources.threads} --csv --full --nopath {input.consensus} 2>> {log} \
-            | sed -E 's/^([^,]+)_cns_raw\\.fasta,/\\1,/' >> {output.mlst}
+            | sed -E 's/^([^,]+)_gene_consensus_unfiltered\\.fasta,/\\1,/' >> {output.mlst}
         """
 
 rule count_genes:
     input:
-        consensus = expand("03.probes_reconstruction/consensus/{sample}_cns_raw.fasta", sample=SAMPLES)
+        consensus = expand("03.target_gene_recovery/gene_consensus/{sample}_gene_consensus_unfiltered.fasta", sample=SAMPLES)
     output:
-        gene_counts = temp("03.probes_reconstruction/gene_per_sample_counts.tsv")
+        gene_counts = temp("03.target_gene_recovery/gene_per_sample_counts.tsv")
     shell:
         """
         echo -e "sample_id\tgene_count" > {output.gene_counts}
-        counts=$(grep "^>" -c 03.probes_reconstruction/consensus/*_target_gene_consensus.fasta | 
-            sed 's/_target_gene_consensus.fasta//g' |
-            sed 's#03.probes_reconstruction/consensus/##g' |
+        counts=$(grep "^>" -c 03.target_gene_recovery/gene_consensus/*_gene_consensus_filtered.fasta | 
+            sed 's/_gene_consensus_filtered.fasta//g' |
+            sed 's#03.target_gene_recovery/gene_consensus/##g' |
             awk -F: '{{print $1"\t"$2}}')
         
         echo "$counts" >> {output.gene_counts}
@@ -799,17 +695,17 @@ rule count_genes:
 #     formatting.
 #     """
 #     input:
-#         recon_stats  = expand("03.probes_reconstruction/stats/{sample}_recon_stats.tsv", sample=SAMPLES),
-#         mapped_stats = expand("03.probes_reconstruction/stats/{sample}_mapped_stats.tsv", sample=SAMPLES)
+#         recon_stats  = expand("03.target_gene_recovery/stats/{sample}_recon_stats.tsv", sample=SAMPLES),
+#         mapped_stats = expand("03.target_gene_recovery/stats/{sample}_mapped_stats.tsv", sample=SAMPLES)
 #     output:
-#         summary_out = "03.probes_reconstruction/reconstruction_summary.xlsx"
+#         summary_out = "03.target_gene_recovery/reconstruction_summary.xlsx"
 #     params:
-#         stats_dir      = "03.probes_reconstruction/stats/",
+#         stats_dir      = "03.target_gene_recovery/stats/",
 #         summary_script = str(UTILS_DIR / "reconstruction_summary.R")
 #     conda:
 #         "envs/r_tools.yaml"
 #     log:
-#         "logs/03.probes_reconstruction/summary_reconstruction.log"
+#         "logs/03.target_gene_recovery/summary_reconstruction.log"
 #     message:
 #         "--- [STATS] Generating reconstruction summary report ---"
 #     shell:
@@ -826,13 +722,13 @@ rule report:
     """
     input:
         qc_summary   = "01.pre-processing/preprocessing_summary_stats.tsv",
-        genes_counts = "03.probes_reconstruction/gene_per_sample_counts.tsv",
+        genes_counts = "03.target_gene_recovery/gene_per_sample_counts.tsv",
         mlst_summary = "04.mlst-typing/mlst_summary.csv",
-        mapped_stats = expand("03.probes_reconstruction/stats/{sample}_mapped_stats.tsv", sample=SAMPLES)
+        mapped_stats = expand("03.target_gene_recovery/stats/{sample}_mapped_stats.tsv", sample=SAMPLES)
     output:
-        report = "pipeline_report.xlsx"
+        report = "run_summary.xlsx"
     params:
-        stats_dir      = "03.probes_reconstruction/stats/",
+        stats_dir      = "03.target_gene_recovery/stats/",
         report_script = str(UTILS_DIR / "generate_report.R")
     conda:
         "envs/r_tools.yaml"
@@ -941,10 +837,10 @@ rule prepare_alignment_files:
       - Reconstructed consensus sequence from the sample
     """
     input:
-        consensus_filtered = "03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta",
+        consensus_filtered = "03.target_gene_recovery/gene_consensus/{sample}_gene_consensus_filtered.fasta",
         ref_dir            = "05.phylogenetic_trees/refs/",
         xf_refs            = expand("05.phylogenetic_trees/refs/{fasta}/{fasta}.bed.fasta", fasta=XF_GENOMES),
-        checkpoint         = "03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt"
+        checkpoint         = "03.target_gene_recovery/checkpoint/{sample}_recovery_check.txt"
     output:
         gene_ids    = "05.phylogenetic_trees/{sample}/genes_ids.txt",
         gene_outdir = temp(directory("05.phylogenetic_trees/{sample}/genes"))
@@ -1002,7 +898,7 @@ rule align_and_trim_genes:
     input:
         gene_ids   = "05.phylogenetic_trees/{sample}/genes_ids.txt",
         genes_dir  = "05.phylogenetic_trees/{sample}/genes",
-        checkpoint = "03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt"
+        checkpoint = "03.target_gene_recovery/checkpoint/{sample}_recovery_check.txt"
     output:
         summary   = "05.phylogenetic_trees/{sample}/alignment_summary.txt",
         align_dir = directory("05.phylogenetic_trees/{sample}/alignments")
@@ -1072,7 +968,7 @@ rule phylogenetic_analysis:
     input:
         gene_ids           = "05.phylogenetic_trees/{sample}/genes_ids.txt",
         alignment_summary  = "05.phylogenetic_trees/{sample}/alignment_summary.txt",
-        checkpoint         = "03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt"
+        checkpoint         = "03.target_gene_recovery/checkpoint/{sample}_recovery_check.txt"
     output:
         concat_alignment = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_concatenated_alignment.phy",
         partition_file   = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}_partitions.txt",
@@ -1126,11 +1022,7 @@ rule phylogenetic_analysis:
 
 rule plot_tree:
     """
-    Generate phylogenetic tree visualization.
-
-    Creates a PDF image of the phylogenetic tree using R/ggtree
-    (utils/plot_tree.R), highlighting this sample against the reference
-    genomes and coloring tips by Xf subspecies.
+    Plot phylogenetic tree.
     """
     input:
         iqtree_tree    = "05.phylogenetic_trees/{sample}/consensus_tree/{sample}.contree",
@@ -1173,16 +1065,11 @@ rule plot_tree:
 rule phylogeny_phase:
     """
     Phase 2 target rule: phylogenetic analysis for successful samples.
-
-    Orchestrates the phylogenetic analysis workflow only for samples that
-    passed the reconstruction checkpoint (see `rule verify_reconstruction`).
-    This is the target `xf_capture run` requests automatically after Phase 1
-    (or on user confirmation if invoked with `--no-auto`).
     """
     input:
         # Ensure Phase 1 is complete
         mlst                 = "04.mlst-typing/mlst_summary.csv",
-        reconstruction_check = expand("03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt", sample=SAMPLES),
+        recovery_check = expand("03.target_gene_recovery/checkpoint/{sample}_recovery_check.txt", sample=SAMPLES),
 
         # Reference genome extractions
         xf_ref_dir   = "05.phylogenetic_trees/refs/",
@@ -1209,15 +1096,15 @@ rule phylogeny_phase:
         echo "" >> {output.completion}
 
         # Count processed samples
-        total_samples=$(ls 03.probes_reconstruction/checkpoint/*_reconstruction_check.txt 2>/dev/null | wc -l)
+        total_samples=$(ls 03.target_gene_recovery/checkpoint/*_recovery_check.txt 2>/dev/null | wc -l)
         successful_count=0
         failed_count=0
 
         echo "Processing checkpoint results:" >> {output.completion}
 
-        for checkpoint_file in 03.probes_reconstruction/checkpoint/*_reconstruction_check.txt; do
+        for checkpoint_file in 03.target_gene_recovery/checkpoint/*_recovery_check.txt; do
             [ -e "$checkpoint_file" ] || continue
-            sample=$(basename "$checkpoint_file" _reconstruction_check.txt)
+            sample=$(basename "$checkpoint_file" _recovery_check.txt)
 
             if grep -q "SUCCESS:" "$checkpoint_file"; then
                 genes_count=0
@@ -1266,23 +1153,19 @@ rule phylogeny_phase:
 rule prepare_multi_alignment_files:
     """
     Prepare per-gene FASTA files for the joint multi-sample alignment.
-
-    For each gene present in every selected sample (COMMON_GENES), combines:
-      - Sequences from all reference genomes
-      - Reconstructed consensus sequence from every selected sample
     """
     input:
-        consensus_filtered = expand("03.probes_reconstruction/consensus/{sample}_target_gene_consensus.fasta", sample=MULTI_SAMPLES),
+        consensus_filtered = expand("03.target_gene_recovery/gene_consensus/{sample}_gene_consensus_filtered.fasta", sample=MULTI_SAMPLES),
         ref_dir            = "05.phylogenetic_trees/refs/",
         xf_refs            = expand("05.phylogenetic_trees/refs/{fasta}/{fasta}.bed.fasta", fasta=XF_GENOMES),
-        checkpoints        = expand("03.probes_reconstruction/checkpoint/{sample}_reconstruction_check.txt", sample=MULTI_SAMPLES)
+        checkpoints        = expand("03.target_gene_recovery/checkpoint/{sample}_recovery_check.txt", sample=MULTI_SAMPLES)
     output:
         gene_ids    = "06.multi_phylogeny/genes_ids.txt",
         gene_outdir = temp(directory("06.multi_phylogeny/genes"))
     params:
         samples       = list(MULTI_SAMPLES),
         genes         = list(COMMON_GENES),
-        consensus_dir = "03.probes_reconstruction/consensus"
+        consensus_dir = "03.target_gene_recovery/gene_consensus"
     conda:
         "envs/mapping.yaml"
     log:
@@ -1321,7 +1204,7 @@ rule prepare_multi_alignment_files:
             # gene (this is the key difference vs. Phase 2's
             # prepare_alignment_files, which only ever adds ONE sample here).
             for sample in "${{samples[@]}}"; do
-                seqkit grep -n -r -p "^${{gene_id}}$" {params.consensus_dir}/${{sample}}_target_gene_consensus.fasta \
+                seqkit grep -n -r -p "^${{gene_id}}$" {params.consensus_dir}/${{sample}}_gene_consensus_filtered.fasta \
                     > {output.gene_outdir}/cns_${{sample}}_${{gene_id}}.fasta
 
                 perl -i.bak -pe "s/^>.*/>${{sample}}/g" {output.gene_outdir}/cns_${{sample}}_${{gene_id}}.fasta && rm {output.gene_outdir}/cns_${{sample}}_${{gene_id}}.fasta.bak
@@ -1336,9 +1219,6 @@ rule prepare_multi_alignment_files:
 rule align_and_trim_multi_genes:
     """
     Align and trim gene sequences for the joint multi-sample tree.
-
-    Same MAFFT + ClipKit pattern as `align_and_trim_genes` (Phase 2), but
-    running once over the fixed set of selected samples instead of per-sample.
     """
     input:
         gene_ids  = "06.multi_phylogeny/genes_ids.txt",
@@ -1398,12 +1278,6 @@ rule align_and_trim_multi_genes:
 rule multi_phylogenetic_analysis:
     """
     Construct the joint multi-sample phylogenetic tree using IQ-TREE.
-
-    Concatenates aligned genes and performs partitioned phylogenetic analysis
-    with ModelFinder for optimal model selection and bootstrap support.
-    Identical settings to `phylogenetic_analysis` (Phase 2); only the
-    inputs/outputs are un-wildcarded since this produces a single tree file
-    for the whole selected sample set.
     """
     input:
         gene_ids          = "06.multi_phylogeny/genes_ids.txt",
@@ -1462,9 +1336,6 @@ rule multi_phylogenetic_analysis:
 rule plot_multi_tree:
     """
     Generate the joint multi-sample phylogenetic tree visualization.
-
-    Highlights every selected sample (as opposed to a single one in Phase 2)
-    against the reference genomes, colored by subspecies.
     """
     input:
         iqtree_tree    = "06.multi_phylogeny/tree/multiphylo.contree",
@@ -1511,10 +1382,6 @@ rule plot_multi_tree:
 rule multi_phylogeny_phase:
     """
     Phase 3 target rule: joint multi-sample phylogenetic analysis.
-
-    Orchestrates the joint tree reconstruction for the user-selected sample
-    subset (--samples-list), restricted to their common genes. This is the
-    target `xf_capture multi-phylo` requests explicitly.
     """
     input:
         gene_ids          = "06.multi_phylogeny/genes_ids.txt",
