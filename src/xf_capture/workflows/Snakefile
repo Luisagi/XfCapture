@@ -678,7 +678,7 @@ rule count_genes:
     shell:
         """
         echo -e "sample_id\tgene_count" > {output.gene_counts}
-        counts=$(grep "^>" -c 03.target_gene_recovery/gene_consensus/*_gene_consensus_filtered.fasta | 
+        counts=$(grep "^>" -c -H 03.target_gene_recovery/gene_consensus/*_gene_consensus_filtered.fasta |
             sed 's/_gene_consensus_filtered.fasta//g' |
             sed 's#03.target_gene_recovery/gene_consensus/##g' |
             awk -F: '{{print $1"\t"$2}}')
