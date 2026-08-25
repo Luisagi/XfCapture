@@ -274,8 +274,12 @@ def run_pipeline(
         # -------------------------------------------------------------------------
         print("\n[Phase 2] Running phylogenetic analysis...\n")
 
+        # Insert the target right after "snakemake" (index 0), not appended at
+        # the end: --quiet/--resources use nargs='*', so a target placed after
+        # them gets swallowed as one of their values instead of being treated
+        # as a build target.
         phylo_cmd = snakemake_cmd.copy()
-        phylo_cmd.append("phylogeny_phase")
+        phylo_cmd.insert(1, "phylogeny_phase")
 
         try:
             result = subprocess.run(phylo_cmd)
